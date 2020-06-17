@@ -2,6 +2,7 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL =
 process.env.DATABASE_URL || 'postgres://localhost/safeplaces_test';
 
+const { caseService, pointService } = require('../../app/lib/db');
 const _ = require('lodash');
 const chai = require('chai');
 const should = chai.should(); // eslint-disable-line
@@ -10,9 +11,8 @@ const jwt = require('jsonwebtoken');
 
 const mockData = require('../lib/mockData');
 
-const server = require('../../app');
-const casesService = require('../../db/models/cases');
-const pointsService = require('../../db/models/points');
+const app = require('../../app');
+const server = app.getTestingServer();
 
 const jwtSecret = require('../../config/jwtConfig');
 
@@ -53,7 +53,7 @@ describe('Case', () => {
   describe('fetch case points', () => {
 
     before(async () => {
-      await casesService.deleteAllRows()
+      await caseService.deleteAllRows()
 
       const caseParams = {
         organization_id: currentOrg.id,
@@ -70,12 +70,12 @@ describe('Case', () => {
 
     it('and return multiple case points', async () => {
       const results = await chai
-        .request(server.app)
+        .request(server)
         .post(`/case/points`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
         .send({ caseId: currentCase.caseId });
-
+        
       results.error.should.be.false;
       results.should.have.status(200);
       results.body.should.be.a('object');
@@ -97,7 +97,7 @@ describe('Case', () => {
     let caseOne, caseTwo, caseThree;
 
     before(async () => {
-      await casesService.deleteAllRows()
+      await caseService.deleteAllRows()
 
       const caseParams = {
         organization_id: currentOrg.id,
@@ -114,7 +114,7 @@ describe('Case', () => {
 
     it('and return points for all cases', async () => {
       const results = await chai
-        .request(server.app)
+        .request(server)
         .post(`/cases/points`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
@@ -136,7 +136,7 @@ describe('Case', () => {
 
     it('and returns no points if no caseIds are passed', async () => {
       const results = await chai
-        .request(server.app)
+        .request(server)
         .post(`/cases/points`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
@@ -152,7 +152,7 @@ describe('Case', () => {
 
     it('and fails if caseIds are not passed', async () => {
       const results = await chai
-        .request(server.app)
+        .request(server)
         .post(`/cases/points`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
@@ -165,7 +165,7 @@ describe('Case', () => {
   describe('add a single point on a case', () => {
 
     before(async () => {
-      await casesService.deleteAllRows()
+      await caseService.deleteAllRows()
 
       const caseParams = {
         organization_id: currentOrg.id,
@@ -186,7 +186,7 @@ describe('Case', () => {
       };
 
       const results = await chai
-        .request(server.app)
+        .request(server)
         .post(`/case/point`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
@@ -210,8 +210,8 @@ describe('Case', () => {
   describe('update a point on a case', () => {
 
     before(async () => {
-      await casesService.deleteAllRows()
-      await pointsService.deleteAllRows()
+      await caseService.deleteAllRows()
+      await pointService.deleteAllRows()
 
       let params = {
         organization_id: currentOrg.id,
@@ -235,7 +235,7 @@ describe('Case', () => {
       };
 
       const results = await chai
-        .request(server.app)
+        .request(server)
         .put(`/case/point`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
@@ -260,8 +260,8 @@ describe('Case', () => {
   describe('delete a point on a case', () => {
 
     before(async () => {
-      await casesService.deleteAllRows()
-      await pointsService.deleteAllRows()
+      await caseService.deleteAllRows()
+      await pointService.deleteAllRows()
 
       let params = {
         organization_id: currentOrg.id,
@@ -281,13 +281,73 @@ describe('Case', () => {
       };
 
       const results = await chai
-        .request(server.app)
+        .request(server)
         .post(`/case/point/delete`)
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
         .send(newParams);
 
       results.should.have.status(200);
+    });
+  });
+
+  describe.skip('delete points on a case', () => {
+    before(async () => {
+      await caseService.deleteAllRows()
+
+      const caseParams = {
+        organization_id: currentOrg.id,
+        state: 'published'
+      };
+      currentCase = await mockData.mockCase(caseParams)
+
+      // Add Trails
+      let trailsParams = {
+        caseId: currentCase.caseId
+      }
+      await mockData.mockTrails(10, 1800, trailsParams) // Generate 10 trails 30 min apart
+    });
+
+    it('fails when request is malformed', async () => {
+      let results = await chai
+        .request(server)
+        .post(`/case/points/delete`)
+        .set('Authorization', `Bearer ${token}`)
+        .set('content-type', 'application/json')
+        .send();
+        console.log(results.error)
+      results.error.should.not.be.false;
+      results.should.have.status(400);
+
+      results = await chai
+        .request(server)
+        .post(`/case/points/delete`)
+        .set('Authorization', `Bearer ${token}`)
+        .set('content-type', 'application/json')
+        .send({ pointIds: 'invalid' });
+      results.error.should.not.be.false;
+      results.should.have.status(400);
+    });
+
+    it('deletes points', async () => {
+      let points = await caseService.fetchCasePoints(currentCase.caseId);
+      const initialLength = points.length;
+      initialLength.should.be.greaterThan(3);
+
+      const deletedPoints = _.sampleSize(points, 3);
+
+      const results = await chai
+        .request(server)
+        .post(`/case/points/delete`)
+        .set('Authorization', `Bearer ${token}`)
+        .set('content-type', 'application/json')
+        .send({ pointIds: _.map(deletedPoints, point => point.id) });
+
+      results.error.should.be.false;
+      results.should.have.status(200);
+
+      points = await caseService.fetchCasePoints(currentCase.caseId);
+      points.length.should.equal(initialLength - deletedPoints.length);
     });
   });
 

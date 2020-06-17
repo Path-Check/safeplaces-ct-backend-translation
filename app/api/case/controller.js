@@ -2,10 +2,12 @@
 
 const _ = require('lodash');
 
-const casesService = require('../../../db/models/cases');
-const accessCodesService = require('../../../db/models/accessCodes');
-const uploadService = require('../../../db/models/upload');
-const pointsService = require('../../../db/models/points');
+const { 
+  accessCodeService,
+  caseService,
+  pointService,
+  uploadService
+} = require('../../../app/lib/db');
 
 /**
  * @method fetchCasePoints
@@ -18,7 +20,7 @@ exports.fetchCasePoints = async (req, res) => {
 
   if (!caseId) throw new Error('Case ID is not valid.');
 
-  const concernPoints = await casesService.fetchCasePoints(caseId);
+  const concernPoints = await caseService.fetchCasePoints(caseId);
 
   if (concernPoints) {
     res.status(200).json({ concernPoints });
@@ -42,7 +44,7 @@ exports.fetchCasesPoints = async (req, res) => {
     return;
   }
 
-  const concernPoints = await casesService.fetchCasesPoints(caseIds);
+  const concernPoints = await caseService.fetchCasesPoints(caseIds);
 
   if (concernPoints) {
     res.status(200).json({ concernPoints });
@@ -67,7 +69,7 @@ exports.ingestUploadedPoints = async (req, res) => {
     return;
   }
 
-  const accessCode = await accessCodesService.find({ value: codeValue });
+  const accessCode = await accessCodeService.find({ value: codeValue });
 
   // Check access code validity
   if (!accessCode) {
@@ -90,7 +92,7 @@ exports.ingestUploadedPoints = async (req, res) => {
     return;
   }
 
-  const points = await pointsService.createPointsFromUpload(caseId, uploadedPoints);
+  const points = await pointService.createPointsFromUpload(caseId, uploadedPoints);
 
   await uploadService.deletePoints(accessCode);
 
@@ -112,7 +114,7 @@ exports.createCasePoint = async (req, res) => {
   if (!point.time) throw new Error('Latitude is not valid.');
   if (!point.duration) throw new Error('Duration is not valid.');
 
-  const concernPoint = await casesService.createCasePoint(caseId, point);
+  const concernPoint = await caseService.createCasePoint(caseId, point);
 
   if (concernPoint) {
     res.status(200).json({ concernPoint });
@@ -139,7 +141,7 @@ exports.updateCasePoint = async (req, res) => {
 
   const params = _.pick(body, ['longitude','latitude','time','duration']);
 
-  const concernPoint = await pointsService.updateRedactedPoint(pointId, params);
+  const concernPoint = await pointService.updateRedactedPoint(pointId, params);
 
   if (concernPoint) {
     res.status(200).json({ concernPoint });
@@ -160,7 +162,7 @@ exports.deleteCasePoint = async (req, res) => {
 
   if (!pointId) throw new Error('Case ID is not valid.')
 
-  const caseResults = await pointsService.deleteWhere({ id: pointId });
+  const caseResults = await pointService.deleteWhere({ id: pointId });
 
   if (caseResults) {
     res.sendStatus(200);

@@ -1,16 +1,16 @@
 const passport = require('passport');
 const JWTstrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
-const jwtSecret = require('../../config/jwtConfig');
-const users = require('../../db/models/users');
 const ldap = require('ldapjs');
 const CustomStrategy = require('passport-custom').Strategy;
+
+const { private: { userService } } = require('@sublet/data-layer')
 
 const ldapServerUrl = `ldap://${process.env.LDAP_HOST}:${process.env.LDAP_PORT}`;
 
 const opts = {
   jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-  secretOrKey: jwtSecret.secret,
+  secretOrKey: process.env.JWT_SECRET,
 };
 
 const jwtStrategy = new JWTstrategy(opts, async (jwt_payload, done) => {
@@ -22,7 +22,7 @@ const jwtStrategy = new JWTstrategy(opts, async (jwt_payload, done) => {
       return done(new Error('Token Expired'), false);
     }
 
-    const user = await users.findOne({ username: sub });
+    const user = await userService.findOne({ username: sub });
     if (user) {
       done(null, user);
     } else {
@@ -35,11 +35,13 @@ const jwtStrategy = new JWTstrategy(opts, async (jwt_payload, done) => {
 
 passport.use('jwt', jwtStrategy);
 
+console.log('[LDAP] CreateClient')
 const ldapClient = ldap.createClient({
   url: ldapServerUrl,
 });
 
 ldapClient.on('error', err => {
+  console.log('[LDAP] on Error', err)
   if (err.message.startsWith('connect ECONNREFUSED')) {
     throw new Error(`LDAP server not found at ${ldapServerUrl}. Please start a server to enable authentication. Please see README.md for more information.`);
   } else {
@@ -48,6 +50,7 @@ ldapClient.on('error', err => {
 });
 
 ldapClient.bind(process.env.LDAP_BIND, process.env.LDAP_PASS, err => {
+  console.log('[LDAP] bind outside')
   if (err) console.log(err);
 });
 
@@ -58,6 +61,7 @@ ldapClient.bind(process.env.LDAP_BIND, process.env.LDAP_PASS, err => {
 if (
   process.env.LDAP_SEARCH.indexOf('{{username}}') === -1
 ) {
+  console.log('[LDAP] error thrown')
   throw new Error(
     'LDAP_FILTER environment variable must contain the keyword {{username}}. ' +
     'These keywords will be replaced by the request details appropriately.'
@@ -72,6 +76,8 @@ passport.use('ldap', new CustomStrategy(
      * {{username}} will be replaced by the sent username
      * {{password}} will be replaced by the sent password
      */
+    
+    console.log('[LDAP] custom strategy')
 
     let query =
       process.env.LDAP_SEARCH

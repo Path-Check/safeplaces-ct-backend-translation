@@ -2,6 +2,7 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL =
 process.env.DATABASE_URL || 'postgres://localhost/safeplaces_test';
 
+const { uploadService } = require('../../app/lib/db');
 const chai = require('chai');
 const should = chai.should(); // eslint-disable-line
 const chaiHttp = require('chai-http');
@@ -9,9 +10,10 @@ const chaiHttp = require('chai-http');
 const jwt = require('jsonwebtoken');
 const jwtSecret = require('../../config/jwtConfig');
 
-const server = require('../../app');
+const app = require('../../app');
+const server = app.getTestingServer();
+
 const mockData = require('../lib/mockData');
-const uploadService = require('../../db/models/upload');
 
 chai.use(chaiHttp);
 
@@ -53,7 +55,7 @@ describe('POST /case/points/ingest', () => {
 
   it('should fail for unauthorized clients', async () => {
     let result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .send();
     result.should.have.status(401);
@@ -61,7 +63,7 @@ describe('POST /case/points/ingest', () => {
 
   it('should fail for malformed requests', async () => {
     let result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -70,7 +72,7 @@ describe('POST /case/points/ingest', () => {
     result.should.have.status(400);
 
     result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -81,7 +83,7 @@ describe('POST /case/points/ingest', () => {
 
   it('should fail for invalid access codes', async () => {
     let result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -93,7 +95,7 @@ describe('POST /case/points/ingest', () => {
 
   it('should fail when consent is not granted', async () => {
     let result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -109,7 +111,7 @@ describe('POST /case/points/ingest', () => {
     await mockData.mockUploadPoints(currentAccessCode, 0);
 
     let result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -132,7 +134,7 @@ describe('POST /case/points/ingest', () => {
     let points = await mockData.mockUploadPoints(currentAccessCode, 5);
 
     let result = await chai
-      .request(server.app)
+      .request(server)
       .post('/case/points/ingest')
       .set('Authorization', `Bearer ${token}`)
       .send({
