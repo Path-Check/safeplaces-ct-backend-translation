@@ -1,3 +1,14 @@
-const { server } = require('./src/');
+const path = require('path');
+const passport = require('./app/lib/passport');
 
-module.exports = server;
+const config = {
+  port: process.env.PORT || '3000',
+  appFolder: path.join(__dirname, 'app')
+}
+
+const server = require('@sublet/safeplaces-server')(config)
+
+server.setPassport(passport)
+server.setupAndCreate()
+
+module.exports = server
