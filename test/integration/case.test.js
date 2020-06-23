@@ -92,6 +92,42 @@ describe('Case', () => {
     });
   });
 
+  describe('fetch case points with duration logic', () => {
+
+    let groupedTrails = null
+    let durationCaseId = null
+
+    before(async () => {
+      await caseService.deleteAllRows()
+      await pointService.deleteAllRows()
+
+      const options = {
+        organization_id: currentOrg.id,
+        state: 'published',
+        startTime: new Date().getTime() - (86400000 * 30)
+      };
+
+      groupedTrails = await mockData.mockTrailsDirect(options)
+      durationCaseId = groupedTrails[0].case_id
+    });
+
+    it('and return multiple case points', async () => {
+      
+      const results = await chai
+        .request(server)
+        .post(`/case/points`)
+        .set('Authorization', `Bearer ${token}`)
+        .set('content-type', 'application/json')
+        .send({ caseId: durationCaseId });
+      
+      results.error.should.be.false;
+      results.should.have.status(200);
+      
+      groupedTrails.length.should.equal(367);
+      results.body.concernPoints.length.should.equal(353);
+    });
+  });
+
   describe('fetch points for multiple cases', () => {
 
     let caseOne, caseTwo, caseThree;
@@ -191,7 +227,7 @@ describe('Case', () => {
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
         .send(newParams);
-
+        
       results.error.should.be.false;
       results.should.have.status(200);
       results.body.should.be.a('object');
@@ -291,7 +327,7 @@ describe('Case', () => {
     });
   });
 
-  describe.skip('delete points on a case', () => {
+  describe('delete points on a case', () => {
     before(async () => {
       await caseService.deleteAllRows()
 
@@ -315,7 +351,7 @@ describe('Case', () => {
         .set('Authorization', `Bearer ${token}`)
         .set('content-type', 'application/json')
         .send();
-        console.log(results.error)
+        
       results.error.should.not.be.false;
       results.should.have.status(400);
 

@@ -9,6 +9,8 @@ const {
   uploadService
 } = require('../../../app/lib/db');
 
+const transform = require('../../lib/pocTransform.js');
+
 /**
  * @method fetchCasePoints
  *
@@ -20,9 +22,10 @@ exports.fetchCasePoints = async (req, res) => {
 
   if (!caseId) throw new Error('Case ID is not valid.');
 
-  const concernPoints = await caseService.fetchCasePoints(caseId);
-
+  let concernPoints = await caseService.fetchCasePoints(caseId);
+  
   if (concernPoints) {
+    concernPoints = transform.discreetToDuration(concernPoints)
     res.status(200).json({ concernPoints });
   }
   else {
@@ -44,9 +47,10 @@ exports.fetchCasesPoints = async (req, res) => {
     return;
   }
 
-  const concernPoints = await caseService.fetchCasesPoints(caseIds);
+  let concernPoints = await caseService.fetchCasesPoints(caseIds);
 
   if (concernPoints) {
+    concernPoints = transform.discreetToDuration(concernPoints)
     res.status(200).json({ concernPoints });
   }
   else {
@@ -100,6 +104,27 @@ exports.ingestUploadedPoints = async (req, res) => {
 };
 
 /**
+ * @method deleteCasePoints
+ *
+ * Deletes the given points of concern.
+ *
+ */
+exports.deleteCasePoints = async (req, res) => {
+  const { pointIds } = req.body;
+
+  if (pointIds ==  null || !_.isArray(pointIds)) {
+    res.status(400).send();
+    return;
+  }
+
+  if (pointIds.length > 0) {
+    await pointService.deleteIds(pointIds);
+  }
+
+  res.status(200).send();
+};
+
+/**
  * @method createCasePoint
  *
  * Creates a new point of concern to be associated with the case.
@@ -114,9 +139,10 @@ exports.createCasePoint = async (req, res) => {
   if (!point.time) throw new Error('Latitude is not valid.');
   if (!point.duration) throw new Error('Duration is not valid.');
 
-  const concernPoint = await caseService.createCasePoint(caseId, point);
+  let concernPoint = await caseService.createCasePoint(caseId, point);
 
   if (concernPoint) {
+    [concernPoint] = transform.discreetToDuration([concernPoint])
     res.status(200).json({ concernPoint });
   }
   else {
@@ -141,9 +167,10 @@ exports.updateCasePoint = async (req, res) => {
 
   const params = _.pick(body, ['longitude','latitude','time','duration']);
 
-  const concernPoint = await pointService.updateRedactedPoint(pointId, params);
+  let concernPoint = await pointService.updateRedactedPoint(pointId, params);
 
   if (concernPoint) {
+    [concernPoint] = transform.discreetToDuration([concernPoint])
     res.status(200).json({ concernPoint });
   }
   else {

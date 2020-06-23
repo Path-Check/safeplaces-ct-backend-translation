@@ -19,6 +19,11 @@ router.post(
 );
 
 router.post(
+  '/case/points/delete',
+  router.wrapAsync(async (req, res) => await controller.deleteCasePoints(req, res), true),
+);
+
+router.post(
   '/case/point',
   router.wrapAsync(async (req, res) => await controller.createCasePoint(req, res), true),
 );

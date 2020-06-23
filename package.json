@@ -27,8 +27,8 @@
   ],
   "dependencies": {
     "@google-cloud/storage": "^5.0.1",
-    "@sublet/data-layer": "^0.0.6",
-    "@sublet/safeplaces-server": "file:../safeplaces-server/dist",
+    "@sublet/data-layer": "0.1.0",
+    "@sublet/safeplaces-server": "0.0.8",
     "adm-zip": "^0.4.14",
     "aws-sdk": "^2.692.0",
     "bcrypt": "^4.0.1",
