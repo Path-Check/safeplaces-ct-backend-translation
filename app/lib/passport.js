@@ -4,7 +4,7 @@ const ExtractJWT = require('passport-jwt').ExtractJwt;
 const ldap = require('ldapjs');
 const CustomStrategy = require('passport-custom').Strategy;
 
-const { private: { userService } } = require('@sublet/data-layer')
+const { private: { userService } } = require('@pathcheck/data-layer')
 
 const ldapServerUrl = `ldap://${process.env.LDAP_HOST}:${process.env.LDAP_PORT}`;
 
