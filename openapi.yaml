@@ -1,0 +1,391 @@
+openapi: 3.0.0
+info:
+  title: SafePlaces Translation API
+  contact: {}
+  version: '1.0'
+paths:
+
+  /case/points/ingest:
+    post:
+      summary: Associate concern points that were uploaded by SafePaths mobile application user to a cases
+      operationId: AssociatePointstoCase
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociatePointstoCaseRequest'
+            example:
+              caseId: 1
+              accessCode: '272236'
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociatePointstoCaseResponse'
+      deprecated: false
+
+  /case/points:
+    post:
+      summary: Get all points of concern associated with a case
+      operationId: CasePoints
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CasePointsRequest'
+            example:
+              caseId: 1
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CasePointsResponse'
+      deprecated: false
+
+  /case/points/delete:
+    post:
+      summary: Deletes a collection of points
+      operationId: DeleteCasePoints
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteCasePointsRequest'
+        required: true
+      responses:
+        '200':
+          description: 'Points were successfully deleted'
+          headers: {}
+      deprecated: false
+
+  /case/point:
+    post:
+      summary: Create a point of concern
+      operationId: CreateCasePoint
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCasePointRequest'
+            example:
+              caseId: '1'
+              point:
+                longitude: '23.183994'
+                latitude: '-72.318221'
+                time: '2020-06-02T18:25:43.511Z'
+                duration: 10
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Point'
+      deprecated: false
+
+    put:
+      summary: Update an existing point
+      operationId: CasePoint
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CasePointRequest'
+            example:
+              pointId: 9332
+              longitude: '23.183994'
+              latitude: '-72.318221'
+              time: '2020-06-02T18:25:43.511Z'
+              duration: 20
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/UpdatedPoint'
+      deprecated: false
+
+  /case/point/delete:
+    post:
+      summary: Delete Case Point
+      operationId: DeleteCasePoint
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteCasePointRequest'
+            example:
+              pointId: 9332
+        required: true
+      responses:
+        '204':
+          description: 'Point was successfully deleted'
+          headers: {}
+      deprecated: true
+
+  /cases/points:
+    post:
+      summary: Returns all points associated with the cases
+      operationId: CasesPoints
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CasesPointsRequest'
+            example:
+              caseIds:
+                - 1
+                - 2
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CasesPointsResponse'
+      deprecated: false
+  
+components:
+  schemas:
+    AssociatePointstoCaseRequest:
+      title: AssociatePointstoCaseRequest
+      required:
+        - caseId
+        - accessCode
+      type: object
+      properties:
+        caseId:
+          type: integer
+          format: int32
+        accessCode:
+          type: string
+      example:
+        caseId: 1
+        accessCode: '272236'
+    
+    AssociatePointstoCaseResponse:
+      title: AssociatePointsToCaseResponse
+      type: array
+      items:
+        type: object
+      example:
+        concernPoints:
+        - pointId: 1
+          longitude: '23.183994'
+          latitude: '-72.318221'
+          time: '2020-06-02T18:25:43.511Z'
+          duration: 10
+        - pointId: 2
+          longitude: '22.183994'
+          latitude: '-73.318221'
+          time: '2020-06-02T18:45:43.511Z'
+          duration: 5
+       
+    CasePointsRequest:
+      title: CasePointsRequest
+      required:
+        - caseId
+      type: object
+      properties:
+        caseId:
+          type: integer
+          format: int32
+      example:
+        caseId: 1
+        
+    CasePointsResponse:
+      title: CasePointsResponse
+      type: array
+      items:
+        type: object
+      example:
+        concernPoints:
+        - pointId: 1
+          caseId: 1
+          longitude: '23.183994'
+          latitude: '-72.318221'
+          time: '2020-06-02T18:25:43.511Z'
+          duration: 10
+        - pointId: 2
+          caseId: 1
+          longitude: '22.183994'
+          latitude: '-73.318221'
+          time: '2020-06-02T18:45:43.511Z'
+          duration: 5
+
+    CreateCasePointRequest:
+      title: CreateCasePointRequest
+      required:
+        - caseId
+        - point
+      type: object
+      properties:
+        caseId:
+          type: string
+        point:
+          $ref: '#/components/schemas/Point'
+      example:
+        caseId: '1'
+        point:
+          longitude: '23.183994'
+          latitude: '-72.318221'
+          time: '2020-06-02T18:25:43.511Z'
+          duration: 10
+
+    Point:
+      title: Point
+      required:
+        - longitude
+        - latitude
+        - time
+        - duration
+      type: object
+      properties:
+        pointId:
+          type: integer
+        longitude:
+          type: string
+        latitude:
+          type: string
+        time:
+          type: string
+        duration:
+          type: integer
+          format: int32
+      example:
+        pointId: 1
+        longitude: '23.183994'
+        latitude: '-72.318221'
+        time: '2020-06-02T18:25:43.511Z'
+        duration: 10
+
+    CasePointRequest:
+      title: CasePointRequest
+      required:
+        - pointId
+        - longitude
+        - latitude
+        - time
+        - duration
+      type: object
+      properties:
+        pointId:
+          type: integer
+          format: int32
+        longitude:
+          type: string
+        latitude:
+          type: string
+        time:
+          type: string
+        duration:
+          type: integer
+          format: int32
+      example:
+        pointId: 9332
+        longitude: '23.183994'
+        latitude: '-72.318221'
+        time: '2020-06-02T18:25:43.511Z'
+        duration: 20
+
+    UpdatedPoint:
+      title: UpdatedPoint
+      example:
+        pointId: 9332
+        longitude: '23.183994'
+        latitude: '-72.318221'
+        time: '2020-06-02T18:25:43.511Z'
+        duration: 20
+
+    DeleteCasePointRequest:
+      title: DeleteCasePointRequest
+      required:
+        - pointId
+      type: object
+      properties:
+        pointId:
+          type: integer
+          format: int32
+      example:
+        pointId: 9332
+
+    DeleteCasePointsRequest:
+      title: DeleteCasePointsRequest
+      required:
+        - pointIds
+      type: array
+      properties:
+        pointIds:
+          type: array
+      items:
+        type: integer
+      example:
+        pointIds: 
+          - 9332
+          - 8333
+
+    CasesPointsRequest:
+      title: CasesPointsRequest
+      required:
+        - caseIds
+      type: object
+      properties:
+        caseIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+      example:
+        caseIds:
+          - 1
+          - 2
+
+    CasesPointsResponse:
+      title: CasesPointsResponse
+      type: array
+      items:
+        type: object
+      example:
+        concernPoints:
+        - pointId: 1
+          caseId: 1
+          longitude: '23.183994'
+          latitude: '-72.318221'
+          time: '2020-06-02T18:25:43.511Z'
+          duration: 10
+        - pointId: 2
+          caseId: 2
+          longitude: '22.183994'
+          latitude: '-73.318221'
+          time: '2020-06-02T18:45:43.511Z'
+          duration: 5
+    
+  securitySchemes:
+    httpBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - httpBearer: []
