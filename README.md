@@ -1,7 +1,7 @@
 
 # Safeplaces Backend Translation Example
 
-This repository holds an example backend for translation endpoints for the [Safeplaces API specification](https://github.com/Path-Check/safeplaces-frontend/blob/dev_mvp/Safe-Places-Server.md).
+This repository holds an example backend for translation endpoints for the [Safeplaces Translation API specification](https://github.com/Path-Check/safeplaces-backend-translation/blob/dev/openapi.yaml).
 
 Safeplaces is a toolkit for public health, built on top of data shared by users of [Private Kit](https://github.com/tripleblindmarket/covid-safe-paths).
 
