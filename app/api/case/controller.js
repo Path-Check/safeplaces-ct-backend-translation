@@ -96,11 +96,17 @@ exports.ingestUploadedPoints = async (req, res) => {
     return;
   }
 
-  const points = await pointService.createPointsFromUpload(caseId, uploadedPoints);
+  let points = await pointService.createPointsFromUpload(caseId, uploadedPoints);
+  if (points) {
+    await uploadService.deletePoints(accessCode);
 
-  await uploadService.deletePoints(accessCode);
-
-  res.status(200).json({ concernPoints: points });
+    points = transform.discreetToDuration(points)
+  
+    res.status(200).json({ concernPoints: points });
+  }
+  else {
+    throw new Error('Problem saving points.');
+  }
 };
 
 /**

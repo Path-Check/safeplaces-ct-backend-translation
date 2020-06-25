@@ -38,7 +38,7 @@ function loadPasswd(req, res, next) {
       if (!record || !record.length) continue;
 
       req.users[record[0]] = {
-        dn: `cn=${record[0]}, ${process.env.LDAP_ORG}`,
+        dn: process.env.LDAP_ORG,
         attributes: {
           cn: record[0],
           userPassword: record[1],
@@ -53,7 +53,7 @@ function loadPasswd(req, res, next) {
 
 const pre = [authorize, loadPasswd];
 
-server.search(process.env.LDAP_ORG, pre, function (req, res, next) {
+server.search(process.env.LDAP_SEARCH, pre, function (req, res, next) {
   Object.keys(req.users).forEach(function (k) {
     if (
       req.filter.matches(req.users[k].attributes) &&
