@@ -3,7 +3,7 @@ services:
   safeplaces:
     build:
       context: .
-    container_name: safeplaces
+    container_name: safeplaces-translation
     #restart: unless-stopped
     env_file: .env
     ports:
