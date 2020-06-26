@@ -1,21 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spp-be-hermes
+  name: spp-be-translate
   labels:
-    app: spp-be-hermes
+    app: spp-be-translate
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: spp-be-hermes
+      app: spp-be-translate
   template:
     metadata:
       labels:
-        app: spp-be-hermes
+        app: spp-be-translate
     spec:
       containers:
-        - name: spp-be-hermes
+        - name: spp-be-translate
+          volumeMounts:
+            - mountPath: /app/keys
+              name: gcs-svc
           image: gcr.io/PROJECT_ID/IMAGE:TAG
           imagePullPolicy: IfNotPresent
           env:
@@ -23,7 +26,7 @@ spec:
             value: "3000"
           envFrom:
             - secretRef:
-                name: expressapp
+                name: staging-translate
           ports:
             - name: express
               containerPort: 3000
@@ -40,3 +43,7 @@ spec:
               port: express
             initialDelaySeconds: 30
             periodSeconds: 2
+      volumes:
+        - name: gcs-svc
+          configMap:
+            name: spl-be-svc
