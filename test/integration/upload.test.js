@@ -8,7 +8,6 @@ const should = chai.should(); // eslint-disable-line
 const chaiHttp = require('chai-http');
 
 const jwt = require('jsonwebtoken');
-const jwtSecret = require('../../config/jwtConfig');
 
 const app = require('../../app');
 const server = app.getTestingServer();
@@ -47,7 +46,7 @@ describe('POST /case/points/ingest', () => {
         exp:
           ~~(Date.now() / 1000) + (parseInt(process.env.JWT_EXP) || 1 * 60 * 60), // Default expires in an hour
       },
-      jwtSecret.secret,
+      process.env.JWT_SECRET,
     );
 
     currentAccessCode = await mockData.mockAccessCode();

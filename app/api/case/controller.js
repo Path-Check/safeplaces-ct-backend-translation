@@ -29,7 +29,7 @@ exports.fetchCasePoints = async (req, res) => {
     res.status(200).json({ concernPoints });
   }
   else {
-    throw new Error('Internal server error.');
+    throw new Error(`Concern points could not be found for case id ${caseId}`);
   }
 };
 
@@ -54,7 +54,7 @@ exports.fetchCasesPoints = async (req, res) => {
     res.status(200).json({ concernPoints });
   }
   else {
-    throw new Error('Internal server error.');
+    throw new Error(`Concern points could not be found for case id ${JSON.stringify(caseIds)}`);
   }
 };
 
@@ -96,11 +96,16 @@ exports.ingestUploadedPoints = async (req, res) => {
     return;
   }
 
-  const points = await pointService.createPointsFromUpload(caseId, uploadedPoints);
+  let concernPoints = await pointService.createPointsFromUpload(caseId, uploadedPoints);
+  if (concernPoints) {
 
-  await uploadService.deletePoints(accessCode);
+    await uploadService.deletePoints(accessCode);
 
-  res.status(200).json({ concernPoints: points });
+    concernPoints = transform.discreetToDuration(concernPoints)
+
+    res.status(200).json({ concernPoints });
+  }
+  throw new Error(`Concern points being returned were invalid.`);
 };
 
 /**
@@ -146,7 +151,7 @@ exports.createCasePoint = async (req, res) => {
     res.status(200).json({ concernPoint });
   }
   else {
-    throw new Error('Internal server error.');
+    throw new Error(`Concern point could not be created for case ${caseId} using point data.`);
   }
 };
 
@@ -174,7 +179,7 @@ exports.updateCasePoint = async (req, res) => {
     res.status(200).json({ concernPoint });
   }
   else {
-    throw new Error('Internal server error.');
+    throw new Error(`Concern point could not be updated for point ${pointId} using point data.`);
   }
 };
 
@@ -195,6 +200,6 @@ exports.deleteCasePoint = async (req, res) => {
     res.sendStatus(200);
   }
   else {
-    throw new Error('Internal server error.');
+    throw new Error(`Concern point could not be deleted for point ${pointId}.`);
   }
 };
