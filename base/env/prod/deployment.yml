@@ -1,24 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spp-be-express
+  name: prod-spl-translate
   labels:
-    app: spp-be-express
+    app: prod-spl-translate
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: spp-be-express
+      app: prod-spl-translate
   template:
     metadata:
       labels:
-        app: spp-be-express
+        app: prod-spl-translate
     spec:
       containers:
-        - name: spp-be-express
-          volumeMounts:
-            - mountPath: /app/keys
-              name: gcs-svc
+        - name: prod-spl-translate
           image: gcr.io/PROJECT_ID/IMAGE:TAG
           imagePullPolicy: IfNotPresent
           env:
@@ -26,7 +23,7 @@ spec:
             value: "3000"
           envFrom:
             - secretRef:
-                name: expressapp
+                name: prod-spl-translate
           ports:
             - name: express
               containerPort: 3000
@@ -43,7 +40,3 @@ spec:
               port: express
             initialDelaySeconds: 30
             periodSeconds: 2
-      volumes:
-        - name: gcs-svc
-          configMap:
-            name: spl-be-svc

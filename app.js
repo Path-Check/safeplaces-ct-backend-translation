@@ -6,7 +6,7 @@ const config = {
   appFolder: path.join(__dirname, 'app')
 }
 
-const server = require('@sublet/safeplaces-server')(config)
+const server = require('@pathcheck/safeplaces-server')(config)
 
 server.setPassport(passport)
 server.setupAndCreate()
