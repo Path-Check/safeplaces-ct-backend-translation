@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+/**
+ * Environment variable validation
+ */
+require('../tools/validateEnv')(process.env);
+
 const server = require('../app');
 
 server.start()

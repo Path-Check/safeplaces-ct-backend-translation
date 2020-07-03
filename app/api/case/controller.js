@@ -165,7 +165,13 @@ exports.updateCasePoint = async (req, res) => {
   if (!body.time) throw new Error('Latitude is not valid.');
   if (!body.duration) throw new Error('Duration is not valid.');
 
-  const params = _.pick(body, ['longitude','latitude','time','duration']);
+  const params = _.pick(body, [
+    'longitude',
+    'latitude',
+    'time',
+    'duration',
+    'nickname',
+  ]);
 
   let concernPoint = await pointService.updateRedactedPoint(pointId, params);
 
@@ -175,6 +181,37 @@ exports.updateCasePoint = async (req, res) => {
   }
   else {
     throw new Error('Internal server error.');
+  }
+};
+
+/**
+ * @method updateCasePoints
+ *
+ * Updates existing points of concern
+ *
+ */
+exports.updateCasePoints = async (req, res) => {
+  const {
+    body,
+    body: { pointIds },
+  } = req;
+
+  if (!pointIds) throw new Error('Point IDs are not valid.');
+
+  const params = _.pick(body, ['nickname']);
+
+  let concernPoints = await pointService.updateRedactedPoints(
+    pointIds,
+    params,
+  );
+
+  if (concernPoints) {
+    concernPoints = transform.discreetToDuration(concernPoints)
+    res.status(200).json({ concernPoints });
+  } else {
+    throw new Error(
+      `Concern points could not be updated for points ${pointIds}.`,
+    );
   }
 };
 
