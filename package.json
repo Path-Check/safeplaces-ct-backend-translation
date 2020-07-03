@@ -6,7 +6,7 @@
     "migrate:up": "spdl migrate:latest --scope private --env development",
     "migrate:down": "spdl migrate:rollback --scope private --env development",
     "seed:dev": "spdl seed:run --scope private --env development",
-    "seed:test": "spdl migrate:latest --scope private --env test",
+    "seed:test": "spdl seed:run --scope private --env test",
     "start": "node ./bin/www",
     "lint": "eslint ./",
     "lint:fix": "eslint ./ --fix",
