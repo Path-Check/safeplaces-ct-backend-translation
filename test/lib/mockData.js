@@ -456,10 +456,11 @@ class MockData {
       .fill('')
       .map(() => {
         coordTime = coordTime + standardIncrement * 60 * 1000;
+        const date = new Date(coordTime);
         return {
           longitude: coordinates.longitude,
           latitude: coordinates.latitude,
-          time: coordTime,
+          time: date.toString(),
         };
       });
   }
@@ -470,20 +471,19 @@ class MockData {
     startAt = new Date().getTime(),
     decrementTime = true,
   ) {
-    let coordTime = Math.floor(startAt / 1000);
     return Array(numberOfTrails)
       .fill('')
       .map(() => {
         if (decrementTime) {
-          coordTime = coordTime - timeIncrementInSeconds;
+          startAt = startAt - timeIncrementInSeconds;
         } else {
-          coordTime = coordTime + timeIncrementInSeconds;
+          startAt = startAt + timeIncrementInSeconds;
         }
         const coords = randomCoordinates({ fixed: 5 }).split(',');
         return {
           longitude: parseFloat(coords[1]),
           latitude: parseFloat(coords[0]),
-          time: coordTime,
+          time: startAt,
         };
       });
   }

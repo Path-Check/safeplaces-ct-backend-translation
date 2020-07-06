@@ -27,7 +27,7 @@ describe('Points of Concern', () => {
     const trails = mockData._generateGroupedTrailsData(coordinates, startTime, 25)
     const grouped = transform.discreetToDuration(trails)
     const ungrouped = transform.durationToDiscreet(grouped)
-    
+
     expect(trails.length).to.be.equal(5);
     expect(grouped.length).to.be.equal(1);
     expect(ungrouped.length).to.be.equal(5);
@@ -51,7 +51,7 @@ describe('Points of Concern', () => {
     expect(testGrouping.length).to.be.equal(1);
 
     // Start 5 minutes after the last trail point and add 100 random points in 5 min increments
-    const randomTrails = mockData._generateTrailsData(100, 300, (groupOne[4].time + 300000), false) 
+    const randomTrails = mockData._generateTrailsData(100, 300, (groupOne[4].time + 300000), false)
     final = final.concat(randomTrails)
     expect(randomTrails.length).to.be.equal(100);
 
@@ -63,7 +63,7 @@ describe('Points of Concern', () => {
     expect(testGrouping.length).to.be.equal(1);
 
     // Start 5 minutes after the last trail point and add 250 random points in 5 min increments
-    const randomTrailsTwo = mockData._generateTrailsData(250, 300, (groupTwo[4].time + 300000), false) 
+    const randomTrailsTwo = mockData._generateTrailsData(250, 300, (groupTwo[4].time + 300000), false)
     expect(randomTrailsTwo.length).to.be.equal(250);
     final = final.concat(randomTrailsTwo)
 

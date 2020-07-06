@@ -2,13 +2,14 @@
 
 const _ = require('lodash');
 
-const { 
+const {
   accessCodeService,
   caseService,
   pointService,
   uploadService
 } = require('../../../app/lib/db');
 
+const durationService = require('../../lib/durationService.js');
 const transform = require('../../lib/pocTransform.js');
 
 /**
@@ -23,7 +24,7 @@ exports.fetchCasePoints = async (req, res) => {
   if (!caseId) throw new Error('Case ID is not valid.');
 
   let concernPoints = await caseService.fetchCasePoints(caseId);
-  
+
   if (concernPoints) {
     concernPoints = transform.discreetToDuration(concernPoints)
     res.status(200).json({ concernPoints });
@@ -144,11 +145,11 @@ exports.createCasePoint = async (req, res) => {
   if (!point.time) throw new Error('Latitude is not valid.');
   if (!point.duration) throw new Error('Duration is not valid.');
 
-  let concernPoint = await caseService.createCasePoint(caseId, point);
+  const newConcernPoints = await durationService.createDiscreetPointsFromDuration(caseId, point);
 
-  if (concernPoint) {
-    [concernPoint] = transform.discreetToDuration([concernPoint])
-    res.status(200).json({ concernPoint });
+  if (newConcernPoints) {
+    let durationPoint = transform.discreetToDuration(newConcernPoints);
+    res.status(200).json({ concernPoint: durationPoint.shift() });
   }
   else {
     throw new Error(`Concern point could not be created for case ${caseId} using point data.`);
@@ -162,26 +163,19 @@ exports.createCasePoint = async (req, res) => {
  *
  */
 exports.updateCasePoint = async (req, res) => {
-  const { body, body: { pointId } } = req;
+  const { body } = req;
 
-  if (!pointId) throw new Error('Point ID is not valid.');
+  if (!body.discreetPointIds) throw new Error('Point ID is not valid.');
   if (!body.latitude) throw new Error('Latitude is not valid.');
   if (!body.longitude) throw new Error('Latitude is not valid.');
   if (!body.time) throw new Error('Latitude is not valid.');
   if (!body.duration) throw new Error('Duration is not valid.');
+  if (!body.caseId) throw new Error('CaseId is not valid.');
 
-  const params = _.pick(body, [
-    'longitude',
-    'latitude',
-    'time',
-    'duration',
-    'nickname',
-  ]);
+  const updatedPointsData = await durationService.updateDiscreetPointsFromDuration(body);
 
-  let concernPoint = await pointService.updateRedactedPoint(pointId, params);
-
-  if (concernPoint) {
-    [concernPoint] = transform.discreetToDuration([concernPoint])
+  if (updatedPointsData) {
+    [concernPoint] = transform.discreetToDuration(updatedPointsData);
     res.status(200).json({ concernPoint });
   }
   else {

@@ -79,7 +79,7 @@ describe('Case', () => {
       results.body.concernPoints.length.should.equal(10);
 
       const firstChunk = results.body.concernPoints.shift();
-      firstChunk.should.have.property('pointId');
+      firstChunk.should.have.property('discreetPointIds');
       firstChunk.should.have.property('longitude');
       firstChunk.should.have.property('latitude');
       firstChunk.should.have.property('time');
@@ -122,7 +122,7 @@ describe('Case', () => {
       results.body.concernPoints.length.should.equal(30);
 
       const firstChunk = results.body.concernPoints.shift();
-      firstChunk.should.have.property('pointId');
+      firstChunk.should.have.property('discreetPointIds');
       firstChunk.should.have.property('longitude');
       firstChunk.should.have.property('latitude');
       firstChunk.should.have.property('time');
@@ -192,7 +192,7 @@ describe('Case', () => {
       results.body.should.be.a('object');
       results.body.should.have.property('concernPoint');
       results.body.concernPoint.should.be.a('object');
-      results.body.concernPoint.should.have.property('pointId');
+      results.body.concernPoint.should.have.property('discreetPointIds');
       results.body.concernPoint.should.have.property('longitude');
       results.body.concernPoint.should.have.property('latitude');
       results.body.concernPoint.should.have.property('time');
@@ -226,12 +226,13 @@ describe('Case', () => {
       const testPoint = currentCase.points[0];
 
       const newParams = {
-        pointId: testPoint.id,
+        discreetPointIds: [ testPoint.id ],
         longitude: 12.91328448,
         latitude: 39.24060321,
         time: '2020-05-21T18:25:43.511Z',
-        duration: 5,
+        duration: 10,
         nickname: 'grocery store',
+        caseId: currentCase.caseId
       };
 
       const results = await chai
@@ -246,12 +247,12 @@ describe('Case', () => {
       results.body.should.be.a('object');
       results.body.should.have.property('concernPoint');
       results.body.concernPoint.should.be.a('object');
-      results.body.concernPoint.should.have.property('pointId');
+      results.body.concernPoint.should.have.property('discreetPointIds');
       results.body.concernPoint.should.have.property('longitude');
       results.body.concernPoint.should.have.property('latitude');
       results.body.concernPoint.should.have.property('time');
       results.body.concernPoint.should.have.property('duration');
-      results.body.concernPoint.pointId.should.equal(testPoint.id);
+      results.body.concernPoint.duration.should.equal(newParams.duration);
       results.body.concernPoint.longitude.should.equal(newParams.longitude);
       results.body.concernPoint.nickname.should.equal(newParams.nickname);
     });
