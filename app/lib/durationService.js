@@ -30,6 +30,6 @@ class DurationService {
     await pointService.deleteIds(durationPoint.discreetPointIds);
     return await this.createDiscreetPointsFromDuration(durationPoint.caseId, params)
   }
-};
+}
 
 module.exports = new DurationService();

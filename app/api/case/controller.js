@@ -175,11 +175,11 @@ exports.updateCasePoint = async (req, res) => {
   const updatedPointsData = await durationService.updateDiscreetPointsFromDuration(body);
 
   if (updatedPointsData) {
-    [concernPoint] = transform.discreetToDuration(updatedPointsData);
-    res.status(200).json({ concernPoint });
+    const durationPoint = transform.discreetToDuration(updatedPointsData);
+    res.status(200).json({ concernPoint: durationPoint.shift() });
   }
   else {
-    throw new Error(`Concern point could not be updated for point ${pointId} using point data.`);
+    throw new Error(`Concern point could not be updated for discreetPoints ${body.discreetPointIds} using point data.`);
   }
 };
 

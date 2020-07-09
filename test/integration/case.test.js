@@ -60,7 +60,7 @@ describe('Case', () => {
       let trailsParams = {
         caseId: currentCase.caseId,
       };
-      await mockData.mockTrails(10, 1800, trailsParams); // Generate 10 trails 30 min apart
+      await mockData.mockTrails(10, 300, trailsParams); // Generate 10 trails 30 min apart
     });
 
     it('and return multiple case points', async () => {
