@@ -28,6 +28,7 @@ exports.fetchCasePoints = async (req, res) => {
   if (concernPoints) {
     concernPoints = transform.discreetToDuration(concernPoints)
     res.status(200).json({ concernPoints });
+    return;
   }
   else {
     throw new Error(`Concern points could not be found for case id ${caseId}`);
@@ -53,8 +54,8 @@ exports.fetchCasesPoints = async (req, res) => {
   if (concernPoints) {
     concernPoints = transform.discreetToDuration(concernPoints)
     res.status(200).json({ concernPoints });
-  }
-  else {
+    return;
+  } else {
     throw new Error(`Concern points could not be found for case id ${JSON.stringify(caseIds)}`);
   }
 };
@@ -105,6 +106,7 @@ exports.ingestUploadedPoints = async (req, res) => {
     concernPoints = transform.discreetToDuration(concernPoints)
 
     res.status(200).json({ concernPoints });
+    return;
   }
   throw new Error(`Concern points being returned were invalid.`);
 };
@@ -116,18 +118,19 @@ exports.ingestUploadedPoints = async (req, res) => {
  *
  */
 exports.deleteCasePoints = async (req, res) => {
-  const { pointIds } = req.body;
+  const { discreetPointIds } = req.body;
 
-  if (pointIds ==  null || !_.isArray(pointIds)) {
+  if (discreetPointIds ==  null || !_.isArray(discreetPointIds)) {
     res.status(400).send();
     return;
   }
 
-  if (pointIds.length > 0) {
-    await pointService.deleteIds(pointIds);
+  if (discreetPointIds.length > 0) {
+    await pointService.deleteIds(discreetPointIds);
   }
 
   res.status(200).send();
+  return;
 };
 
 /**
@@ -150,8 +153,8 @@ exports.createCasePoint = async (req, res) => {
   if (newConcernPoints) {
     let durationPoint = transform.discreetToDuration(newConcernPoints);
     res.status(200).json({ concernPoint: durationPoint.shift() });
-  }
-  else {
+    return;
+  } else {
     throw new Error(`Concern point could not be created for case ${caseId} using point data.`);
   }
 };
@@ -177,6 +180,7 @@ exports.updateCasePoint = async (req, res) => {
   if (updatedPointsData) {
     const durationPoint = transform.discreetToDuration(updatedPointsData);
     res.status(200).json({ concernPoint: durationPoint.shift() });
+    return;
   }
   else {
     throw new Error(`Concern point could not be updated for discreetPoints ${body.discreetPointIds} using point data.`);
@@ -192,45 +196,25 @@ exports.updateCasePoint = async (req, res) => {
 exports.updateCasePoints = async (req, res) => {
   const {
     body,
-    body: { pointIds },
+    body: { discreetPointIds },
   } = req;
 
-  if (!pointIds) throw new Error('Point IDs are not valid.');
+  if (!discreetPointIds) throw new Error('Discreet Point IDs are not valid.');
 
   const params = _.pick(body, ['nickname']);
 
   let concernPoints = await pointService.updateRedactedPoints(
-    pointIds,
+    discreetPointIds,
     params,
   );
 
   if (concernPoints) {
     concernPoints = transform.discreetToDuration(concernPoints)
     res.status(200).json({ concernPoints });
+    return;
   } else {
     throw new Error(
-      `Concern points could not be updated for points ${pointIds}.`,
+      `Concern points could not be updated for points ${discreetPointIds}.`,
     );
-  }
-};
-
-/**
- * @method deleteCasePoint
- *
- * Deletes the point of concern having the ID corresponding with the pointID param.
- *
- */
-exports.deleteCasePoint = async (req, res) => {
-  const { pointId } = req.body;
-
-  if (!pointId) throw new Error('Case ID is not valid.')
-
-  const caseResults = await pointService.deleteWhere({ id: pointId });
-
-  if (caseResults) {
-    res.sendStatus(200);
-  }
-  else {
-    throw new Error(`Concern point could not be deleted for point ${pointId}.`);
   }
 };

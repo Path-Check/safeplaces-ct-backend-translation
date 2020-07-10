@@ -281,7 +281,7 @@ describe('Case', () => {
       const point2 = currentCase.points[1];
 
       const newParams = {
-        pointIds: [point1.id, point2.id],
+        discreetPointIds: [point1.id, point2.id],
         nickname: 'grocery store',
       };
 
@@ -300,41 +300,6 @@ describe('Case', () => {
 
       const secondChunk = results.body.concernPoints[1];
       secondChunk.nickname.should.equal(newParams.nickname);
-    });
-  });
-
-  describe('delete a point on a case', () => {
-    before(async () => {
-      await caseService.deleteAllRows();
-      await pointService.deleteAllRows();
-
-      let params = {
-        organization_id: currentOrg.id,
-        number_of_trails: 10,
-        seconds_apart: 1800,
-        state: 'staging',
-      };
-
-      currentCase = await mockData.mockCaseAndTrails(
-        _.extend(params, { state: 'unpublished' }),
-      );
-    });
-
-    it('returns a 200', async () => {
-      const testPoint = currentCase.points[0];
-
-      const newParams = {
-        pointId: testPoint.id,
-      };
-
-      const results = await chai
-        .request(server)
-        .post(`/case/point/delete`)
-        .set('Cookie', `access_token=${token}`)
-        .set('content-type', 'application/json')
-        .send(newParams);
-
-      results.should.have.status(200);
     });
   });
 
@@ -387,7 +352,7 @@ describe('Case', () => {
         .post(`/case/points/delete`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .send({ pointIds: _.map(deletedPoints, point => point.id) });
+        .send({ discreetPointIds: _.map(deletedPoints, point => point.id) });
 
       results.error.should.be.false;
       results.should.have.status(200);

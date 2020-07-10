@@ -5,51 +5,72 @@ const _ = require('lodash');
 
 const discreetToDuration = discreetArr => {
   let i, curDiscreet, curDuration;
-  const durationArr = [];
+  let durationArr = [];
 
-  discreetArr.sort((a, b) => (Date.parse(a.time) > Date.parse(b.time) ? 1 : -1));
+  // TODO: make this more performant
 
-  for (i = 0; i < discreetArr.length; i++) {
-    curDiscreet = discreetArr[i];
+  // need to group by caseId on points
+  let discreetPointsByCase = _.groupBy(discreetArr, 'caseId');
 
-    if (i === 0) {
-      curDiscreet.discreetPointIds = [ curDiscreet.id ];
-      durationArr[0] = { ..._.omit(curDiscreet, ['id', 'pointId']), duration: 5 };
-    } else {
-      curDuration = durationArr[durationArr.length - 1];
-      if (!curDuration.discreetPointIds) {
-        curDuration.discreetPointIds = [curDuration.id];
+  // sort each grouping by time
+  discreetPointsByCase = _.map(discreetPointsByCase, function(casePoints) {
+    return casePoints.sort((a, b) => (a.time > b.time ? 1 : -1));
+  });
+  
+  for(let t = 0; t < discreetPointsByCase.length; t++) {
+    let discreetCaseArr = discreetPointsByCase[t];
+    let durationCaseArr = [];
+
+    for (i = 0; i < discreetCaseArr.length; i++) {
+      curDiscreet = discreetCaseArr[i];
+
+      if (i === 0) {
+        curDiscreet.discreetPointIds = [ curDiscreet.id ];
+        durationCaseArr[0] = { ..._.omit(curDiscreet, ['id', 'pointId']), duration: 5 };
+      } else {
+        curDuration = durationCaseArr[durationCaseArr.length - 1];
+        if (!curDuration.discreetPointIds) {
+          curDuration.discreetPointIds = [curDuration.id];
+        }
+
+        if (discreetMergeCondition(curDiscreet, curDuration)) {
+          durationCaseArr[durationCaseArr.length - 1] = discreetMerge(
+            curDiscreet,
+            curDuration,
+          );
+
+          curDuration.discreetPointIds.push(curDiscreet.id);
+        } else {
+          durationCaseArr[durationCaseArr.length] = {
+            ..._.omit(curDiscreet, ['id', 'pointId']),
+            discreetPointIds: [curDiscreet.id],
+            duration: 5,
+          };
+        }
       }
 
-      if (discreetMergeCondition(curDiscreet, curDuration)) {
-        durationArr[durationArr.length - 1] = discreetMerge(
-          curDiscreet,
-          curDuration,
-        );
-
-        curDuration.discreetPointIds.push(curDiscreet.id);
-      } else {
-        durationArr[durationArr.length] = {
-          ..._.omit(curDiscreet, ['id', 'pointId']),
-          discreetPointIds: [curDiscreet.id],
-          duration: 5,
-        };
+      // add duration points for case before moving on to the next case
+      if (i == discreetCaseArr.length - 1) {
+        durationArr = durationArr.concat(durationCaseArr)
       }
     }
   }
 
-  // return roundDuration(durationArr);
+  // map time value of duration points from milliseconds to time object
+  durationArr = _.map(durationArr, function(durationPoint) {
+      durationPoint.time = new Date(durationPoint.time);
+      return durationPoint;
+  });
+
   return durationArr;
 };
 
-// input:      array of Point of Concern data in duration format
+// input:   array of Point of Concern data in duration format
 // output:  array of Point of Concern data in discreet format
 const durationToDiscreet = durationArr => {
   let discreetArr = [];
 
-  durationArr.sort((a, b) => (Date.parse(a.time) > Date.parse(b.time) ? 1 : -1));
-
-//  roundDuration(durationArr)
+  durationArr.sort((a, b) => (a.time > b.time ? 1 : -1));
 
   for (let i = 0; i < durationArr.length; i++) {
     discreetArr = [
@@ -72,16 +93,14 @@ const discreetMergeCondition = (curDiscreet, curDuration) => {
   }
   if (curDiscreet.longitude !== curDuration.longitude) {
     return false;
-  }
-  if (Date.parse(curDiscreet.time) > Date.parse(curDuration.time) + curDuration.duration * MINUTE) {
-    return false;
+  } if (curDiscreet.time > curDuration.time + curDuration.duration * MINUTE) { 
+    return false; 
   }
   return true;
 };
 
 const discreetMerge = (curDiscreet, curDuration) => {
-  const rawDuration =
-    (Date.parse(curDiscreet.time) + 5 * MINUTE - Date.parse(curDuration.time)) / MINUTE;
+  const rawDuration = curDuration.duration + 5;
 
   return { ...curDuration, duration: rawDuration };
 };
