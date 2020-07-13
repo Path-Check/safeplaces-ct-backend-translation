@@ -1,71 +1,81 @@
+const _ = require('lodash');
+
 // input:      array of Point of Concern data in discreet format
 // output:  array of Point of Concern data in duration format
 
 const discreetToDuration = discreetArr => {
   let i, curDiscreet, curDuration;
-  const durationArr = [];
+  let durationArr = [];
 
-  discreetArr.sort((a, b) => (a.time > b.time ? 1 : -1));
+  // TODO: make this more performant
 
-  for (i = 0; i < discreetArr.length; i++) {
-    curDiscreet = discreetArr[i];
-    if (i === 0) {
-      durationArr[0] = { ...discreetArr[0], duration: 5 };
-    } else {
-      curDuration = durationArr[durationArr.length - 1];
+  // need to group by caseId on points
+  let discreetPointsByCase = _.groupBy(discreetArr, 'caseId');
 
-      if (discreetMergeCondition(curDiscreet, curDuration)) {
-        durationArr[durationArr.length - 1] = discreetMerge(
-          curDiscreet,
-          curDuration,
-        );
+  // sort each grouping by time
+  discreetPointsByCase = _.map(discreetPointsByCase, function(casePoints) {
+    return casePoints.sort((a, b) => (a.time > b.time ? 1 : -1));
+  });
+  
+  for(let t = 0; t < discreetPointsByCase.length; t++) {
+    let discreetCaseArr = discreetPointsByCase[t];
+    let durationCaseArr = [];
+
+    for (i = 0; i < discreetCaseArr.length; i++) {
+      curDiscreet = discreetCaseArr[i];
+
+      if (i === 0) {
+        curDiscreet.discreetPointIds = [ curDiscreet.id ];
+        durationCaseArr[0] = { ..._.omit(curDiscreet, ['pointId']), duration: 5 };
       } else {
-        durationArr[durationArr.length] = {
-          ...curDiscreet,
-          duration: 5,
-        };
+        curDuration = durationCaseArr[durationCaseArr.length - 1];
+        if (!curDuration.discreetPointIds) {
+          curDuration.discreetPointIds = [curDuration.id];
+        }
+
+        if (discreetMergeCondition(curDiscreet, curDuration)) {
+          durationCaseArr[durationCaseArr.length - 1] = discreetMerge(
+            curDiscreet,
+            curDuration,
+          );
+
+          curDuration.discreetPointIds.push(curDiscreet.id);
+        } else {
+          durationCaseArr[durationCaseArr.length] = {
+            ..._.omit(curDiscreet, ['pointId']),
+            discreetPointIds: [curDiscreet.id],
+            duration: 5,
+          };
+        }
+      }
+
+      // add duration points for case before moving on to the next case
+      if (i == discreetCaseArr.length - 1) {
+        durationArr = durationArr.concat(durationCaseArr)
       }
     }
   }
 
-  return roundDuration(durationArr);
+  // map time value of duration points from milliseconds to time object
+  durationArr = _.map(durationArr, function(durationPoint) {
+      durationPoint.time = new Date(durationPoint.time);
+      return durationPoint;
+  });
+
+  return durationArr;
 };
 
-// input:      array of Point of Concern data in duration format
+// input:   array of Point of Concern data in duration format
 // output:  array of Point of Concern data in discreet format
 const durationToDiscreet = durationArr => {
-  durationArr.sort((a, b) => (a.time > b.time ? 1 : -1));
-
-  let i, cur, prv;
-  let durationArrMerged = [];
   let discreetArr = [];
 
-  // merge points that intersect one another within a 5 min window
-  // NOTE;  duration is not a multiple of 5
-  for (i = 0; i < durationArr.length; i++) {
-    cur = durationArr[i];
-    if (i === 0) {
-      durationArrMerged[0] = durationArr[0];
-    } else {
-      prv = durationArrMerged[durationArrMerged.length - 1];
-      if (durationMergeCondition(cur, prv)) {
-        durationArrMerged[durationArrMerged.length - 1] = durationMerge(
-          cur,
-          prv,
-        );
-      } else {
-        durationArrMerged[durationArrMerged.length] = cur;
-      }
-    }
-  }
+  durationArr.sort((a, b) => (a.time > b.time ? 1 : -1));
 
-  durationArrMerged = roundDuration(durationArrMerged);
-
-  for (i = 0; i < durationArrMerged.length; i++) {
-    // console.log('durationArrMerged: ', durationArrMerged[i])
+  for (let i = 0; i < durationArr.length; i++) {
     discreetArr = [
       ...discreetArr,
-      ...durationPointToDiscreetPoints(durationArrMerged[i]),
+      ...durationPointToDiscreetPoints(durationArr[i]),
     ];
   }
 
@@ -75,71 +85,40 @@ const durationToDiscreet = durationArr => {
 const MINUTE = 60 * 1000;
 
 const discreetMergeCondition = (curDiscreet, curDuration) => {
+  if (curDiscreet.caseId !== curDuration.caseId) {
+    return false;
+  }
   if (curDiscreet.latitude !== curDuration.latitude) {
     return false;
   }
   if (curDiscreet.longitude !== curDuration.longitude) {
     return false;
-  }
-  if (curDiscreet.time > curDuration.time + curDuration.duration * MINUTE) {
-    return false;
+  } if (curDiscreet.time > curDuration.time + curDuration.duration * MINUTE) { 
+    return false; 
   }
   return true;
 };
 
 const discreetMerge = (curDiscreet, curDuration) => {
-  const rawDuration =
-    (curDiscreet.time + 5 * MINUTE - curDuration.time) / MINUTE;
+  const rawDuration = curDuration.duration + 5;
 
   return { ...curDuration, duration: rawDuration };
 };
 
-const durationMergeCondition = (cur, prv) => {
-  if (cur.latitude !== prv.latitude) {
-    return false;
-  }
-  if (cur.longitude !== prv.longitude) {
-    return false;
-  }
-  if (cur.time > prv.time + prv.duration * MINUTE) {
-    return false;
-  }
-  return true;
-};
-
-const durationMerge = (cur, prv) => {
-  const startTime = prv.time < cur.time ? prv.time : cur.time;
-  const endTime =
-    cur.time + cur.duration * MINUTE > prv.time + prv.duration * MINUTE
-      ? cur.time + cur.duration * MINUTE
-      : prv.time + prv.duration * MINUTE;
-
-  return { ...cur, duration: (endTime - startTime) / MINUTE };
-};
 
 const durationPointToDiscreetPoints = durationPoint => {
   const discreetPoints = [];
   let i;
   for (i = 0; i < durationPoint.duration / 5; i++) {
-    discreetPoints[discreetPoints.length] = {
+    discreetPoints[i] = {
       latitude: durationPoint.latitude,
       longitude: durationPoint.longitude,
-      time: durationPoint.time + i * 5 * MINUTE,
-      hash: durationPoint.hash,
-      publish_date: durationPoint.publish_date
+      time: Date.parse(durationPoint.time) + i * 5 * MINUTE,
+      publish_date: durationPoint.publish_date,
+      nickname: durationPoint.nickname,
     };
   }
   return discreetPoints;
-};
-
-const roundDuration = durationArr => {
-  let i;
-  // round down duration to nearest 5 min
-  for (i = 0; i < durationArr.length; i++) {
-    durationArr[i].duration = Math.floor(durationArr[i].duration / 5) * 5;
-  }
-
-  return durationArr;
 };
 
 module.exports = {
