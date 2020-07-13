@@ -9,6 +9,7 @@ substitutions:
   _PLATFORM: gke
   _CLUSTER_NAME: 'safeplaces'
   _CLUSTER_LOCATION: 'us-central1'
+  _NAMESPACE: 'translate'
 
 steps:
 # - id: 'Pull env file from Secrets Manager'  
