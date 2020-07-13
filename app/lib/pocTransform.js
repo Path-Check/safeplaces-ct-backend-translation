@@ -26,7 +26,7 @@ const discreetToDuration = discreetArr => {
 
       if (i === 0) {
         curDiscreet.discreetPointIds = [ curDiscreet.id ];
-        durationCaseArr[0] = { ..._.omit(curDiscreet, ['id', 'pointId']), duration: 5 };
+        durationCaseArr[0] = { ..._.omit(curDiscreet, ['pointId']), duration: 5 };
       } else {
         curDuration = durationCaseArr[durationCaseArr.length - 1];
         if (!curDuration.discreetPointIds) {
@@ -42,7 +42,7 @@ const discreetToDuration = discreetArr => {
           curDuration.discreetPointIds.push(curDiscreet.id);
         } else {
           durationCaseArr[durationCaseArr.length] = {
-            ..._.omit(curDiscreet, ['id', 'pointId']),
+            ..._.omit(curDiscreet, ['pointId']),
             discreetPointIds: [curDiscreet.id],
             duration: 5,
           };
