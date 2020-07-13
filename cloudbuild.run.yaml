@@ -1,0 +1,54 @@
+# GCP only cloudbuild script to build container image and deploy to Cloud Run Serverless
+
+substitutions:
+  _SERVICE_NAME: 'safeplaces-backend-translate-dev'
+  _SERVICE: 'safeplaces-backend-translate-dev'
+  _REGION: 'us-central1'
+  _SECRET_NAME: ''
+  _PORT: '8080'
+  _PLATFORM: gke
+  _CLUSTER_NAME: 'safeplaces'
+  _CLUSTER_LOCATION: 'us-central1'
+  _NAMESPACE: 'translate'
+
+steps:
+# - id: 'Pull env file from Secrets Manager'  
+#   name: gcr.io/cloud-builders/gcloud
+#   entrypoint: 'bash'
+#   args: [ '-c', "gcloud secrets versions access latest --secret=${_SECRET_NAME} --format='get(payload.data)' | tr '_-' '/+' | base64 -d > .env" ]
+
+- id: 'Build Container Image'
+  name: 'registry.hub.docker.com/library/docker:18'
+  args: [
+    'build',
+    '--tag', 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA',
+    '.' ]
+
+- id: 'Publish Container'
+  name: 'registry.hub.docker.com/library/docker:18'
+  args: [
+    'push',
+    'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA',
+  ]
+
+#
+# Deploys a Cloud Run service.
+#
+
+- id: 'Deploy to Cloud Run'
+  name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:293.0.0-alpine'
+  args:
+  - 'bash'
+  - '-eEuo'
+  - 'pipefail'
+  - '-c'
+  - |-
+    gcloud run deploy "${_SERVICE}-${BRANCH_NAME}" \
+      --quiet \
+      --project "${PROJECT_ID}" \
+      --platform "${_PLATFORM}" \
+      --namespace "${_NAMESPACE}" \
+      --port "${_PORT}" \
+      --cluster "${_CLUSTER_NAME}" \
+      --cluster-location "${_CLUSTER_LOCATION}" \
+      --image "gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA"
