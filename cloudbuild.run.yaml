@@ -4,7 +4,7 @@ steps:
       - build
       - '--no-cache'
       - '-t'
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA'
+      - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
       - .
       - '-f'
       - Dockerfile
@@ -12,23 +12,31 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA'
+      - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
     id: Push
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    args:
-      - run
-      - deploy
-      - $_SERVICE_NAME
-      - '--platform=managed'
-      - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA'
-      - >-
-        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID,$_LABELS
-      - '--region=$_DEPLOY_REGION'
-      - '--quiet'
-    id: Deploy
-    entrypoint: gcloud
+#
+# Deploys a Cloud Run service.
+#
+
+- id: 'Deploy to Cloud Run'
+  name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:293.0.0-alpine'
+  args:
+  - 'bash'
+  - '-eEuo'
+  - 'pipefail'
+  - '-c'
+  - |-
+    gcloud run deploy "${_SERVICE}-${BRANCH_NAME}" \
+      --quiet \
+      --project "${PROJECT_ID}" \
+      --platform "${_PLATFORM}" \
+      --namespace "${_NAMESPACE}" \
+      --port "${_PORT}" \
+      --cluster "${_CLUSTER_NAME}" \
+      --cluster-location "${_CLUSTER_LOCATION}" \
+      --image "gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA"
 images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA'
+  - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
 options:
   substitutionOption: ALLOW_LOOSE
 substitutions:
