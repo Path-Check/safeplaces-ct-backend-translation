@@ -41,8 +41,6 @@ options:
   substitutionOption: ALLOW_LOOSE
 substitutions:
   _SERVICE_NAME: safeplaces-backend-translate-dev
-  _LABELS: gcb-trigger-id=643972cc-c3ac-4fe7-ab22-616530702df1
-  _TRIGGER_ID: 643972cc-c3ac-4fe7-ab22-616530702df1
   # _DEPLOY_REGION: us-central1
   # _GCR_HOSTNAME: us.gcr.io
   _SERVICE: safeplaces-backend-translate-dev
