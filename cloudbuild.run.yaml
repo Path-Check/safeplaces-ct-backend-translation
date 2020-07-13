@@ -1,14 +1,14 @@
 # GCP only cloudbuild script to build container image and deploy to Cloud Run Serverless
 
 substitutions:
-  _SERVICE_NAME: safeplaces-backend-translate-dev
-  _SERVICE: safeplaces-backend-translate-dev
-  _REGION: us-central1
-  _SECRET_NAME: 
-  _PORT: 8080
+  _SERVICE_NAME: 'safeplaces-backend-translate-dev'
+  _SERVICE: 'safeplaces-backend-translate-dev'
+  _REGION: 'us-central1'
+  _SECRET_NAME: ''
+  _PORT: '8080'
   _PLATFORM: gke
-  _CLUSTER_NAME: safeplaces
-  _CLUSTER_LOCATION: us-central1
+  _CLUSTER_NAME: 'safeplaces'
+  _CLUSTER_LOCATION: 'us-central1'
 
 steps:
 # - id: 'Pull env file from Secrets Manager'  
