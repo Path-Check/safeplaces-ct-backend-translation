@@ -1,7 +1,7 @@
 const path = require('path');
 
 const config = {
-  port: process.env.EXPRESS_PORT || '3000',
+  port: process.env.EXPRESSPORT || '3000',
   bind: '127.0.0.1',
   appFolder: path.join(__dirname, 'app'),
   wrapAsync: (asyncFn, validate = false) => {

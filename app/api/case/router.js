@@ -40,8 +40,3 @@ router.put(
     true,
   ),
 );
-
-router.post(
-  '/case/point/delete',
-  router.wrapAsync(async (req, res) => await controller.deleteCasePoint(req, res), true),
-);

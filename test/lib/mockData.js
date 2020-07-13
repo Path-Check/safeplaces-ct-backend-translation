@@ -172,7 +172,7 @@ class MockData {
     if (pointsCase) {
       const trails = this._generateTrailsData(
         options.numberOfRecords,
-        300,
+        300000,
         options.startTime,
         true,
       );
@@ -452,14 +452,16 @@ class MockData {
     const standardIncrement = 5;
     const numberOfTrails = duration / standardIncrement;
     let coordTime = startTime;
+    let date
     return Array(numberOfTrails)
       .fill('')
       .map(() => {
         coordTime = coordTime + standardIncrement * 60 * 1000;
+        date = new Date(coordTime);
         return {
           longitude: coordinates.longitude,
           latitude: coordinates.latitude,
-          time: coordTime,
+          time: date,
         };
       });
   }
@@ -470,20 +472,21 @@ class MockData {
     startAt = new Date().getTime(),
     decrementTime = true,
   ) {
-    let coordTime = Math.floor(startAt / 1000);
+    let date
     return Array(numberOfTrails)
       .fill('')
       .map(() => {
         if (decrementTime) {
-          coordTime = coordTime - timeIncrementInSeconds;
+          startAt = startAt - timeIncrementInSeconds;
         } else {
-          coordTime = coordTime + timeIncrementInSeconds;
+          startAt = startAt + timeIncrementInSeconds;
         }
         const coords = randomCoordinates({ fixed: 5 }).split(',');
+        date = new Date(startAt)
         return {
           longitude: parseFloat(coords[1]),
           latitude: parseFloat(coords[0]),
-          time: coordTime,
+          time: date,
         };
       });
   }

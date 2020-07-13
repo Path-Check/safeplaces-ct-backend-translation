@@ -60,7 +60,7 @@ describe('Case', () => {
       let trailsParams = {
         caseId: currentCase.caseId,
       };
-      await mockData.mockTrails(10, 1800, trailsParams); // Generate 10 trails 30 min apart
+      await mockData.mockTrails(10, 300, trailsParams); // Generate 10 trails 30 min apart
     });
 
     it('and return multiple case points', async () => {
@@ -79,7 +79,7 @@ describe('Case', () => {
       results.body.concernPoints.length.should.equal(10);
 
       const firstChunk = results.body.concernPoints.shift();
-      firstChunk.should.have.property('pointId');
+      firstChunk.should.have.property('discreetPointIds');
       firstChunk.should.have.property('longitude');
       firstChunk.should.have.property('latitude');
       firstChunk.should.have.property('time');
@@ -122,7 +122,7 @@ describe('Case', () => {
       results.body.concernPoints.length.should.equal(30);
 
       const firstChunk = results.body.concernPoints.shift();
-      firstChunk.should.have.property('pointId');
+      firstChunk.should.have.property('discreetPointIds');
       firstChunk.should.have.property('longitude');
       firstChunk.should.have.property('latitude');
       firstChunk.should.have.property('time');
@@ -192,7 +192,7 @@ describe('Case', () => {
       results.body.should.be.a('object');
       results.body.should.have.property('concernPoint');
       results.body.concernPoint.should.be.a('object');
-      results.body.concernPoint.should.have.property('pointId');
+      results.body.concernPoint.should.have.property('discreetPointIds');
       results.body.concernPoint.should.have.property('longitude');
       results.body.concernPoint.should.have.property('latitude');
       results.body.concernPoint.should.have.property('time');
@@ -226,12 +226,13 @@ describe('Case', () => {
       const testPoint = currentCase.points[0];
 
       const newParams = {
-        pointId: testPoint.id,
+        discreetPointIds: [ testPoint.id ],
         longitude: 12.91328448,
         latitude: 39.24060321,
         time: '2020-05-21T18:25:43.511Z',
-        duration: 5,
+        duration: 10,
         nickname: 'grocery store',
+        caseId: currentCase.caseId
       };
 
       const results = await chai
@@ -246,12 +247,12 @@ describe('Case', () => {
       results.body.should.be.a('object');
       results.body.should.have.property('concernPoint');
       results.body.concernPoint.should.be.a('object');
-      results.body.concernPoint.should.have.property('pointId');
+      results.body.concernPoint.should.have.property('discreetPointIds');
       results.body.concernPoint.should.have.property('longitude');
       results.body.concernPoint.should.have.property('latitude');
       results.body.concernPoint.should.have.property('time');
       results.body.concernPoint.should.have.property('duration');
-      results.body.concernPoint.pointId.should.equal(testPoint.id);
+      results.body.concernPoint.duration.should.equal(newParams.duration);
       results.body.concernPoint.longitude.should.equal(newParams.longitude);
       results.body.concernPoint.nickname.should.equal(newParams.nickname);
     });
@@ -280,7 +281,7 @@ describe('Case', () => {
       const point2 = currentCase.points[1];
 
       const newParams = {
-        pointIds: [point1.id, point2.id],
+        discreetPointIds: [point1.id, point2.id],
         nickname: 'grocery store',
       };
 
@@ -299,41 +300,6 @@ describe('Case', () => {
 
       const secondChunk = results.body.concernPoints[1];
       secondChunk.nickname.should.equal(newParams.nickname);
-    });
-  });
-
-  describe('delete a point on a case', () => {
-    before(async () => {
-      await caseService.deleteAllRows();
-      await pointService.deleteAllRows();
-
-      let params = {
-        organization_id: currentOrg.id,
-        number_of_trails: 10,
-        seconds_apart: 1800,
-        state: 'staging',
-      };
-
-      currentCase = await mockData.mockCaseAndTrails(
-        _.extend(params, { state: 'unpublished' }),
-      );
-    });
-
-    it('returns a 200', async () => {
-      const testPoint = currentCase.points[0];
-
-      const newParams = {
-        pointId: testPoint.id,
-      };
-
-      const results = await chai
-        .request(server)
-        .post(`/case/point/delete`)
-        .set('Cookie', `access_token=${token}`)
-        .set('content-type', 'application/json')
-        .send(newParams);
-
-      results.should.have.status(200);
     });
   });
 
@@ -386,7 +352,7 @@ describe('Case', () => {
         .post(`/case/points/delete`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .send({ pointIds: _.map(deletedPoints, point => point.id) });
+        .send({ discreetPointIds: _.map(deletedPoints, point => point.id) });
 
       results.error.should.be.false;
       results.should.have.status(200);
