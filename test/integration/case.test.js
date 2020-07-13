@@ -1,6 +1,6 @@
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL =
-process.env.DATABASE_URL || 'postgres://localhost/safeplaces_test';
+  process.env.DATABASE_URL || 'postgres://localhost/safeplaces_test';
 
 const { caseService, pointService } = require('../../app/lib/db');
 const _ = require('lodash');
@@ -14,16 +14,13 @@ const mockData = require('../lib/mockData');
 const app = require('../../app');
 const server = app.getTestingServer();
 
-const jwtSecret = require('../../config/jwtConfig');
-
 chai.use(chaiHttp);
 
 let currentOrg, currentCase, token;
 
 describe('Case', () => {
-
   before(async () => {
-    await mockData.clearMockData()
+    await mockData.clearMockData();
 
     let orgParams = {
       name: 'My Example Organization',
@@ -33,49 +30,47 @@ describe('Case', () => {
 
     let newUserParams = {
       username: 'myAwesomeUser',
-      password: 'myAwesomePassword',
-      email: 'myAwesomeUser@yomanbob.com',
       organization_id: currentOrg.id,
     };
-    await mockData.mockUser(newUserParams);
+    const user = await mockData.mockUser(newUserParams);
 
     token = jwt.sign(
       {
-        sub: newUserParams.username,
+        sub: user.idm_id,
         iat: ~~(Date.now() / 1000),
         exp:
-          ~~(Date.now() / 1000) + (parseInt(process.env.JWT_EXP) || 1 * 60 * 60), // Default expires in an hour
+          ~~(Date.now() / 1000) +
+          (parseInt(process.env.JWT_EXP) || 1 * 60 * 60), // Default expires in an hour
       },
-      jwtSecret.secret,
+      process.env.JWT_SECRET,
     );
   });
 
   describe('fetch case points', () => {
-
     before(async () => {
-      await caseService.deleteAllRows()
+      await caseService.deleteAllRows();
 
       const caseParams = {
         organization_id: currentOrg.id,
-        state: 'published'
+        state: 'published',
       };
-      currentCase = await mockData.mockCase(caseParams)
+      currentCase = await mockData.mockCase(caseParams);
 
       // Add Trails
       let trailsParams = {
-        caseId: currentCase.caseId
-      }
-      await mockData.mockTrails(10, 1800, trailsParams) // Generate 10 trails 30 min apart
+        caseId: currentCase.caseId,
+      };
+      await mockData.mockTrails(10, 300, trailsParams); // Generate 10 trails 30 min apart
     });
 
     it('and return multiple case points', async () => {
       const results = await chai
         .request(server)
         .post(`/case/points`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send({ caseId: currentCase.caseId });
-        
+
       results.error.should.be.false;
       results.should.have.status(200);
       results.body.should.be.a('object');
@@ -83,78 +78,41 @@ describe('Case', () => {
       results.body.concernPoints.should.be.a('array');
       results.body.concernPoints.length.should.equal(10);
 
-      const firstChunk = results.body.concernPoints.shift()
-      firstChunk.should.have.property('pointId');
+      const firstChunk = results.body.concernPoints.shift();
+      firstChunk.should.have.property('discreetPointIds');
       firstChunk.should.have.property('longitude');
       firstChunk.should.have.property('latitude');
       firstChunk.should.have.property('time');
-
-    });
-  });
-
-  describe('fetch case points with duration logic', () => {
-
-    let groupedTrails = null
-    let durationCaseId = null
-
-    before(async () => {
-      await caseService.deleteAllRows()
-      await pointService.deleteAllRows()
-
-      const options = {
-        organization_id: currentOrg.id,
-        state: 'published',
-        startTime: new Date().getTime() - (86400000 * 30)
-      };
-
-      groupedTrails = await mockData.mockTrailsDirect(options)
-      durationCaseId = groupedTrails[0].case_id
-    });
-
-    it('and return multiple case points', async () => {
-      
-      const results = await chai
-        .request(server)
-        .post(`/case/points`)
-        .set('Authorization', `Bearer ${token}`)
-        .set('content-type', 'application/json')
-        .send({ caseId: durationCaseId });
-      
-      results.error.should.be.false;
-      results.should.have.status(200);
-      
-      groupedTrails.length.should.equal(367);
-      results.body.concernPoints.length.should.equal(353);
+      firstChunk.should.have.property('nickname');
     });
   });
 
   describe('fetch points for multiple cases', () => {
-
     let caseOne, caseTwo, caseThree;
 
     before(async () => {
-      await caseService.deleteAllRows()
+      await caseService.deleteAllRows();
 
       const caseParams = {
         organization_id: currentOrg.id,
-        state: 'staging'
+        state: 'staging',
       };
-      caseOne = await mockData.mockCase(caseParams)
-      caseTwo = await mockData.mockCase(caseParams)
-      caseThree = await mockData.mockCase(caseParams)
+      caseOne = await mockData.mockCase(caseParams);
+      caseTwo = await mockData.mockCase(caseParams);
+      caseThree = await mockData.mockCase(caseParams);
 
-      await mockData.mockTrails(10, 1800, { caseId: caseOne.caseId }) // Generate 10 trails 30 min apart
-      await mockData.mockTrails(10, 1800, { caseId: caseTwo.caseId }) // Generate 10 trails 30 min apart
-      await mockData.mockTrails(10, 1800, { caseId: caseThree.caseId }) // Generate 10 trails 30 min apart
+      await mockData.mockTrails(10, 1800, { caseId: caseOne.caseId }); // Generate 10 trails 30 min apart
+      await mockData.mockTrails(10, 1800, { caseId: caseTwo.caseId }); // Generate 10 trails 30 min apart
+      await mockData.mockTrails(10, 1800, { caseId: caseThree.caseId }); // Generate 10 trails 30 min apart
     });
 
     it('and return points for all cases', async () => {
       const results = await chai
         .request(server)
         .post(`/cases/points`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .send({ caseIds: [caseOne.caseId, caseTwo.caseId, caseThree.caseId ]});
+        .send({ caseIds: [caseOne.caseId, caseTwo.caseId, caseThree.caseId] });
 
       results.error.should.be.false;
       results.should.have.status(200);
@@ -163,20 +121,21 @@ describe('Case', () => {
       results.body.concernPoints.should.be.a('array');
       results.body.concernPoints.length.should.equal(30);
 
-      const firstChunk = results.body.concernPoints.shift()
-      firstChunk.should.have.property('pointId');
+      const firstChunk = results.body.concernPoints.shift();
+      firstChunk.should.have.property('discreetPointIds');
       firstChunk.should.have.property('longitude');
       firstChunk.should.have.property('latitude');
       firstChunk.should.have.property('time');
+      firstChunk.should.have.property('nickname');
     });
 
     it('and returns no points if no caseIds are passed', async () => {
       const results = await chai
         .request(server)
         .post(`/cases/points`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .send({ caseIds: []});
+        .send({ caseIds: [] });
 
       results.error.should.be.false;
       results.should.have.status(200);
@@ -190,7 +149,7 @@ describe('Case', () => {
       const results = await chai
         .request(server)
         .post(`/cases/points`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send();
 
@@ -199,15 +158,14 @@ describe('Case', () => {
   });
 
   describe('add a single point on a case', () => {
-
     before(async () => {
-      await caseService.deleteAllRows()
+      await caseService.deleteAllRows();
 
       const caseParams = {
         organization_id: currentOrg.id,
-        state: 'published'
+        state: 'published',
       };
-      currentCase = await mockData.mockCase(caseParams)
+      currentCase = await mockData.mockCase(caseParams);
     });
 
     it('and return the newly created point', async () => {
@@ -216,64 +174,71 @@ describe('Case', () => {
         point: {
           longitude: 14.91328448,
           latitude: 41.24060321,
-          time: "2020-05-01T18:25:43.511Z",
-          duration: 5
-        }
+          time: '2020-05-01T18:25:43.511Z',
+          duration: 5,
+          nickname: 'home',
+        },
       };
 
       const results = await chai
         .request(server)
         .post(`/case/point`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send(newParams);
-        
+
       results.error.should.be.false;
       results.should.have.status(200);
       results.body.should.be.a('object');
       results.body.should.have.property('concernPoint');
       results.body.concernPoint.should.be.a('object');
-      results.body.concernPoint.should.have.property('pointId');
+      results.body.concernPoint.should.have.property('discreetPointIds');
       results.body.concernPoint.should.have.property('longitude');
       results.body.concernPoint.should.have.property('latitude');
       results.body.concernPoint.should.have.property('time');
-      results.body.concernPoint.longitude.should.equal(newParams.point.longitude);
+      results.body.concernPoint.longitude.should.equal(
+        newParams.point.longitude,
+      );
       results.body.concernPoint.latitude.should.equal(newParams.point.latitude);
       results.body.concernPoint.time.should.equal(newParams.point.time);
+      results.body.concernPoint.nickname.should.equal(newParams.point.nickname);
     });
   });
 
   describe('update a point on a case', () => {
-
     before(async () => {
-      await caseService.deleteAllRows()
-      await pointService.deleteAllRows()
+      await caseService.deleteAllRows();
+      await pointService.deleteAllRows();
 
       let params = {
         organization_id: currentOrg.id,
         number_of_trails: 10,
         seconds_apart: 1800,
-        state: 'staging'
+        state: 'staging',
       };
 
-      currentCase = await mockData.mockCaseAndTrails(_.extend(params, { state: 'unpublished' }))
+      currentCase = await mockData.mockCaseAndTrails(
+        _.extend(params, { state: 'unpublished' }),
+      );
     });
 
     it('return a 200', async () => {
       const testPoint = currentCase.points[0];
 
       const newParams = {
-        pointId: testPoint.id,
+        discreetPointIds: [ testPoint.id ],
         longitude: 12.91328448,
         latitude: 39.24060321,
-        time: "2020-05-21T18:25:43.511Z",
-        duration: 5
+        time: '2020-05-21T18:25:43.511Z',
+        duration: 10,
+        nickname: 'grocery store',
+        caseId: currentCase.caseId
       };
 
       const results = await chai
         .request(server)
         .put(`/case/point`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send(newParams);
 
@@ -282,83 +247,93 @@ describe('Case', () => {
       results.body.should.be.a('object');
       results.body.should.have.property('concernPoint');
       results.body.concernPoint.should.be.a('object');
-      results.body.concernPoint.should.have.property('pointId');
+      results.body.concernPoint.should.have.property('discreetPointIds');
       results.body.concernPoint.should.have.property('longitude');
       results.body.concernPoint.should.have.property('latitude');
       results.body.concernPoint.should.have.property('time');
       results.body.concernPoint.should.have.property('duration');
-      results.body.concernPoint.pointId.should.equal(testPoint.id);
+      results.body.concernPoint.duration.should.equal(newParams.duration);
       results.body.concernPoint.longitude.should.equal(newParams.longitude);
-
+      results.body.concernPoint.nickname.should.equal(newParams.nickname);
     });
   });
 
-  describe('delete a point on a case', () => {
-
+  describe('update multiple points on a case', () => {
     before(async () => {
-      await caseService.deleteAllRows()
-      await pointService.deleteAllRows()
+      await caseService.deleteAllRows();
+      await pointService.deleteAllRows();
 
       let params = {
         organization_id: currentOrg.id,
-        number_of_trails: 10,
+        number_of_trails: 2,
         seconds_apart: 1800,
-        state: 'staging'
+        state: 'staging',
+        nickname: 'home',
       };
 
-      currentCase = await mockData.mockCaseAndTrails(_.extend(params, { state: 'unpublished' }))
+      currentCase = await mockData.mockCaseAndTrails(
+        _.extend(params, { state: 'unpublished' }),
+      );
     });
 
-    it('returns a 200', async () => {
-      const testPoint = currentCase.points[0];
+    it('return a 200', async () => {
+      const point1 = currentCase.points[0];
+      const point2 = currentCase.points[1];
 
       const newParams = {
-        pointId: testPoint.id,
+        discreetPointIds: [point1.id, point2.id],
+        nickname: 'grocery store',
       };
 
       const results = await chai
         .request(server)
-        .post(`/case/point/delete`)
-        .set('Authorization', `Bearer ${token}`)
+        .put(`/case/points`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send(newParams);
 
+      results.error.should.be.false;
       results.should.have.status(200);
+
+      const firstChunk = results.body.concernPoints[0];
+      firstChunk.nickname.should.equal(newParams.nickname);
+
+      const secondChunk = results.body.concernPoints[1];
+      secondChunk.nickname.should.equal(newParams.nickname);
     });
   });
 
   describe('delete points on a case', () => {
     before(async () => {
-      await caseService.deleteAllRows()
+      await caseService.deleteAllRows();
 
       const caseParams = {
         organization_id: currentOrg.id,
-        state: 'published'
+        state: 'published',
       };
-      currentCase = await mockData.mockCase(caseParams)
+      currentCase = await mockData.mockCase(caseParams);
 
       // Add Trails
       let trailsParams = {
-        caseId: currentCase.caseId
-      }
-      await mockData.mockTrails(10, 1800, trailsParams) // Generate 10 trails 30 min apart
+        caseId: currentCase.caseId,
+      };
+      await mockData.mockTrails(10, 1800, trailsParams); // Generate 10 trails 30 min apart
     });
 
     it('fails when request is malformed', async () => {
       let results = await chai
         .request(server)
         .post(`/case/points/delete`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send();
-        
       results.error.should.not.be.false;
       results.should.have.status(400);
 
       results = await chai
         .request(server)
         .post(`/case/points/delete`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
         .send({ pointIds: 'invalid' });
       results.error.should.not.be.false;
@@ -375,9 +350,9 @@ describe('Case', () => {
       const results = await chai
         .request(server)
         .post(`/case/points/delete`)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .send({ pointIds: _.map(deletedPoints, point => point.id) });
+        .send({ discreetPointIds: _.map(deletedPoints, point => point.id) });
 
       results.error.should.be.false;
       results.should.have.status(200);

@@ -123,25 +123,6 @@ paths:
                 $ref: '#/components/schemas/UpdatedPoint'
       deprecated: false
 
-  /case/point/delete:
-    post:
-      summary: Delete Case Point
-      operationId: DeleteCasePoint
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteCasePointRequest'
-            example:
-              pointId: 9332
-        required: true
-      responses:
-        '204':
-          description: 'Point was successfully deleted'
-          headers: {}
-      deprecated: true
-
   /cases/points:
     post:
       summary: Returns all points associated with the cases
