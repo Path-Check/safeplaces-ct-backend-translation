@@ -1,40 +1,40 @@
 steps:
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - build
-      - '--no-cache'
-      - '-t'
-      - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
-      - .
-      - '-f'
-      - Dockerfile
-    id: Build
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - push
-      - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
-    id: Push
+- name: gcr.io/cloud-builders/docker
+  args:
+    - build
+    - '--no-cache'
+    - '-t'
+    - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
+    - .
+    - '-f'
+    - Dockerfile
+  id: Build
+- name: gcr.io/cloud-builders/docker
+  args:
+    - push
+    - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
+  id: Push
 #
 # Deploys a Cloud Run service.
 #
 
-  - id: 'Deploy to Cloud Run'
-    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:293.0.0-alpine'
-    args:
-    - 'bash'
-    - '-eEuo'
-    - 'pipefail'
-    - '-c'
-    - |-
-      gcloud run deploy "${_SERVICE}-${BRANCH_NAME}" \
-        --quiet \
-        --project "${PROJECT_ID}" \
-        --platform "${_PLATFORM}" \
-        --namespace "${_NAMESPACE}" \
-        --port "${_PORT}" \
-        --cluster "${_CLUSTER_NAME}" \
-        --cluster-location "${_CLUSTER_LOCATION}" \
-        --image "gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA"
+- id: 'Deploy to Cloud Run'
+  name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:293.0.0-alpine'
+  args:
+  - 'bash'
+  - '-eEuo'
+  - 'pipefail'
+  - '-c'
+  - |-
+    gcloud run deploy "${_SERVICE}-${BRANCH_NAME}" \
+      --quiet \
+      --project "${PROJECT_ID}" \
+      --platform "${_PLATFORM}" \
+      --namespace "${_NAMESPACE}" \
+      --port "${_PORT}" \
+      --cluster "${_CLUSTER_NAME}" \
+      --cluster-location "${_CLUSTER_LOCATION}" \
+      --image "gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA"
 images:
   - 'gcr.io/${PROJECT_ID}/github.com/path-check/${_SERVICE}:$BRANCH_NAME-$SHORT_SHA'
 options:
