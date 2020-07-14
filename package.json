@@ -28,7 +28,7 @@
   "dependencies": {
     "dotenv": "8.2.0",
     "@google-cloud/storage": "^5.0.1",
-    "@marshall_mccoy/data-layer": "1.0.6",
+    "@marshall_mccoy/data-layer": "1.0.7",
     "@pathcheck/safeplaces-auth": "0.0.8",
     "@pathcheck/safeplaces-server": "0.0.13",
     "adm-zip": "^0.4.14",
