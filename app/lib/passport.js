@@ -2,7 +2,7 @@ const passport = require('passport');
 const JWTstrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
 
-const { private: { userService } } = require('@marshall_mccoy/data-layer')
+const { private: { userService } } = require('@pathcheck/data-layer')
 
 const opts = {
   jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
