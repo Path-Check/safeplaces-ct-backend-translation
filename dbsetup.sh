@@ -1,5 +1,3 @@
-exec "$@"
-
 #!/bin/bash
 FILE=/app/.env
 
