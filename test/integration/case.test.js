@@ -39,8 +39,7 @@ describe('Case', () => {
         sub: user.idm_id,
         iat: ~~(Date.now() / 1000),
         exp:
-          ~~(Date.now() / 1000) +
-          (parseInt(process.env.JWT_EXP) || 1 * 60 * 60), // Default expires in an hour
+          ~~(Date.now() / 1000) + 3600, // Default expires in an hour
       },
       process.env.JWT_SECRET,
     );
