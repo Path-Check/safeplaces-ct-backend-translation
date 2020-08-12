@@ -1,4 +1,5 @@
 const path = require('path');
+const guard = require('./app/lib/auth');
 
 const config = {
   port: process.env.EXPRESSPORT || '3000',
@@ -7,9 +8,8 @@ const config = {
   wrapAsync: (asyncFn, validate = false) => {
     return (req, res, next) => {
       if (validate) {
-        return enforcer
-          .handleRequest(req, res)
-          .then(() => asyncFn(req, res, next))
+        return guard
+          .handleReq(req, res, () => asyncFn(req, res, next))
           .catch(next);
       }
       asyncFn(req, res, next).catch(next);
@@ -18,8 +18,6 @@ const config = {
 };
 
 const server = require('@pathcheck/safeplaces-server')(config);
-const enforcer = require('./app/lib/auth');
-
 server.setupAndCreate();
 
 module.exports = server;
