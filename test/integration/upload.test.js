@@ -7,11 +7,12 @@ const chai = require('chai');
 const should = chai.should(); // eslint-disable-line
 const chaiHttp = require('chai-http');
 
+const jwt = require('jsonwebtoken');
+
 const app = require('../../app');
 const server = app.getTestingServer();
 
 const mockData = require('../lib/mockData');
-const mockAuth = require('../lib/mockAuth');
 
 chai.use(chaiHttp);
 
@@ -35,7 +36,15 @@ describe('POST /case/points/ingest', () => {
 
     const user = await mockData.mockUser(userParams);
 
-    token = mockAuth.getAccessToken(user.idm_id, 'admin');
+    token = jwt.sign(
+      {
+        sub: user.idm_id,
+        iat: ~~(Date.now() / 1000),
+        exp:
+          ~~(Date.now() / 1000) + 3600, // Default expires in an hour
+      },
+      process.env.JWT_SECRET,
+    );
 
     currentAccessCode = await mockData.mockAccessCode();
   });
@@ -50,7 +59,6 @@ describe('POST /case/points/ingest', () => {
       .request(server)
       .post('/case/points/ingest')
       .set('Cookie', `access_token=${token}`)
-      .set('X-Requested-With', 'XMLHttpRequest')
       .send({
         accessCode: '123456',
       });
@@ -60,7 +68,6 @@ describe('POST /case/points/ingest', () => {
       .request(server)
       .post('/case/points/ingest')
       .set('Cookie', `access_token=${token}`)
-      .set('X-Requested-With', 'XMLHttpRequest')
       .send({
         caseId: 1,
       });
@@ -72,7 +79,6 @@ describe('POST /case/points/ingest', () => {
       .request(server)
       .post('/case/points/ingest')
       .set('Cookie', `access_token=${token}`)
-      .set('X-Requested-With', 'XMLHttpRequest')
       .send({
         accessCode: '123456',
         caseId: 1,
@@ -85,7 +91,6 @@ describe('POST /case/points/ingest', () => {
       .request(server)
       .post('/case/points/ingest')
       .set('Cookie', `access_token=${token}`)
-      .set('X-Requested-With', 'XMLHttpRequest')
       .send({
         accessCode: currentAccessCode.value,
         caseId: 1,
@@ -102,7 +107,6 @@ describe('POST /case/points/ingest', () => {
       .request(server)
       .post('/case/points/ingest')
       .set('Cookie', `access_token=${token}`)
-      .set('X-Requested-With', 'XMLHttpRequest')
       .send({
         accessCode: currentAccessCode.value,
         caseId: 1,
@@ -126,7 +130,6 @@ describe('POST /case/points/ingest', () => {
       .request(server)
       .post('/case/points/ingest')
       .set('Cookie', `access_token=${token}`)
-      .set('X-Requested-With', 'XMLHttpRequest')
       .send({
         accessCode: currentAccessCode.value,
         caseId: currentCase.caseId,
