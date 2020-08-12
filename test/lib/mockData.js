@@ -42,17 +42,12 @@ class MockData {
     if (!options.organization_id)
       throw new Error('Organization ID must be provided');
 
-    if (!process.env.SEED_MAPS_API_KEY) {
-      throw new Error('Populate environment variable SEED_MAPS_API_KEY');
-    }
-
     const params = {
       id: uuidv4(),
       idm_id: uuidv4(),
       organization_id: options.organization_id,
       username: options.username,
-      is_admin: true,
-      maps_api_key: process.env.SEED_MAPS_API_KEY,
+      is_admin: true
     };
 
     const results = await userService.create(params);
