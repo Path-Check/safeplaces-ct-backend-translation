@@ -7,9 +7,9 @@ const _ = require('lodash');
 const chai = require('chai');
 const should = chai.should(); // eslint-disable-line
 const chaiHttp = require('chai-http');
+const jwt = require('jsonwebtoken');
 
 const mockData = require('../lib/mockData');
-const mockAuth = require('../lib/mockAuth');
 
 const app = require('../../app');
 const server = app.getTestingServer();
@@ -34,7 +34,15 @@ describe('Case', () => {
     };
     const user = await mockData.mockUser(newUserParams);
 
-    token = mockAuth.getAccessToken(user.idm_id, 'admin');
+    token = jwt.sign(
+      {
+        sub: user.idm_id,
+        iat: ~~(Date.now() / 1000),
+        exp:
+          ~~(Date.now() / 1000) + 3600, // Default expires in an hour
+      },
+      process.env.JWT_SECRET,
+    );
   });
 
   describe('fetch case points', () => {
@@ -60,7 +68,6 @@ describe('Case', () => {
         .post(`/case/points`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send({ caseId: currentCase.caseId });
 
       results.error.should.be.false;
@@ -104,7 +111,6 @@ describe('Case', () => {
         .post(`/cases/points`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send({ caseIds: [caseOne.caseId, caseTwo.caseId, caseThree.caseId] });
 
       results.error.should.be.false;
@@ -128,7 +134,6 @@ describe('Case', () => {
         .post(`/cases/points`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send({ caseIds: [] });
 
       results.error.should.be.false;
@@ -145,7 +150,6 @@ describe('Case', () => {
         .post(`/cases/points`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send();
 
       results.should.have.status(400);
@@ -180,7 +184,6 @@ describe('Case', () => {
         .post(`/case/point`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send(newParams);
 
       results.error.should.be.false;
@@ -236,7 +239,6 @@ describe('Case', () => {
         .put(`/case/point`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send(newParams);
 
       results.error.should.be.false;
@@ -287,7 +289,6 @@ describe('Case', () => {
         .put(`/case/points`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send(newParams);
 
       results.error.should.be.false;
@@ -324,7 +325,6 @@ describe('Case', () => {
         .post(`/case/points/delete`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send();
       results.error.should.not.be.false;
       results.should.have.status(400);
@@ -334,7 +334,6 @@ describe('Case', () => {
         .post(`/case/points/delete`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send({ pointIds: 'invalid' });
       results.error.should.not.be.false;
       results.should.have.status(400);
@@ -352,7 +351,6 @@ describe('Case', () => {
         .post(`/case/points/delete`)
         .set('Cookie', `access_token=${token}`)
         .set('content-type', 'application/json')
-        .set('X-Requested-With', 'XMLHttpRequest')
         .send({ discreetPointIds: _.map(deletedPoints, point => point.id) });
 
       results.error.should.be.false;
