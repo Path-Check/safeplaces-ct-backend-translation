@@ -41,7 +41,7 @@ Follow the links below for more information on how to setup and configure the Sa
 - [SafePlaces Docs Home](https://github.com/Path-Check/safeplaces-docs/tree/master)
 - [Databases](https://github.com/Path-Check/safeplaces-docs/tree/master/safeplaces-backend-services/databases)
 - [Setting Up SafePlaces Translation Service](https://github.com/Path-Check/safeplaces-docs/tree/master/safeplaces-backend-services/setup#setting-up-safeplaces-translation-service)
-- [Environment Variables](https://github.com/Path-Check/safeplaces-docs/blob/master/safeplaces-backend-services/environment-variables/safeplaces-backend-service.md)
+- [Environment Variables](https://github.com/Path-Check/safeplaces-docs/blob/master/safeplaces-backend-services/environment-variables/safeplaces-translation-service.md)
 - [Authentication](https://github.com/Path-Check/safeplaces-docs/tree/master/safeplaces-backend-services/authentication)
 - [User Account & Organization Setup](https://github.com/Path-Check/safeplaces-docs/tree/master/safeplaces-backend-services/accounts-configuration)
 - [Publishing Location Data](https://github.com/Path-Check/safeplaces-docs/tree/master/safeplaces-backend-services/published-data)
